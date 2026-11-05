@@ -3,6 +3,8 @@
 import re
 from collections.abc import Callable
 
+import openai
+
 from . import tools
 from .checkpoints import Checkpoints
 from .llm import LLM
@@ -49,7 +51,17 @@ class Agent:
             if self.tokens["last_prompt"] > self.context_budget:
                 self.compact()
             self.on_event("thinking", step=step)
-            reply = self.llm.chat(self.messages, tools.schemas(self.ws))
+            try:
+                reply = self.llm.chat(self.messages, tools.schemas(self.ws))
+            except openai.BadRequestError as e:
+                if "tool" in str(e).lower() and pushbacks < 3:  # e.g. it called a tool this mode does not offer
+                    pushbacks += 1
+                    names = ", ".join(s["function"]["name"] for s in tools.schemas(self.ws))
+                    problem = f"Your tool call was rejected: {str(e)[-200:]}. You can only use: {names}."
+                    self.on_event("check", text=problem)
+                    self.messages.append({"role": "user", "content": f"[automatic check] {problem}"})
+                    continue
+                raise
             self.count(reply)
             self.messages.append(reply.as_message())
 
@@ -90,6 +102,9 @@ class Agent:
         last = sentences[-1].lower()
         if last.endswith(":") or re.match(r"(let's|let me|i will|i'll|next,? i|now,? i|i need to)\b", last):
             return "You said what you will do next but did not do it. Call the tool now, in this reply."
+        if self.ws.changed and self.ws.last_exit is None and not self.helper and self.ws.mode != "plan":
+            return (f"You changed {', '.join(sorted(self.ws.changed))} but have not run anything since. Run the "
+                    "tests (or the program) with run_command and read the real result before you say it works.")
         if self.ws.last_exit not in (None, 0):
             changed = ", ".join(sorted(self.ws.changed)) or "no files"
             return (f"The last command you ran failed (exit code {self.ws.last_exit}) and you have changed "

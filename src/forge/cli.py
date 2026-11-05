@@ -3,6 +3,8 @@
 import argparse
 from pathlib import Path
 
+import openai
+
 from . import config, skills
 from .agent import Agent
 from .checkpoints import Checkpoints
@@ -35,6 +37,7 @@ def build(root: Path, args) -> Agent:
                   Checkpoints(ws.root))
     trace.event("start", provider=s.provider, model=s.model, mode=s.mode)
     agent.settings = s
+    agent.screen_stop = screen.stop_spinner
     return agent
 
 
@@ -91,6 +94,9 @@ def repl(agent: Agent) -> None:
             agent.ask(line)
         except KeyboardInterrupt:
             console.print("[yellow]stopped[/]")
+        except openai.APIError as e:  # the model's server said no (rate limit, bad request…): keep the session
+            agent.screen_stop()
+            console.print(f"[red]The model's server returned an error: {e}[/]")
 
 
 def main() -> None:

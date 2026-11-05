@@ -79,6 +79,7 @@ def test_undo_puts_files_back(ws):
     llm = FakeLLM(call("read_file", path="app.py"),
                   call("edit_file", 1, path="app.py", old_text="a - b", new_text="a + b"),
                   call("write_file", 2, path="notes.txt", content="hi"),
+                  call("run_command", 3, command="python -m pytest -q"),
                   say("Done."))
     Agent(llm, ws, checkpoints=cp).ask("fix it")
     assert (ws.root / "notes.txt").exists()
@@ -102,3 +103,33 @@ def test_skills_are_found_and_loaded(ws):
 def test_skill_without_header_uses_the_folder_name():
     s = parse("Just steps.", "deploy")
     assert (s.name, s.description, s.body) == ("deploy", "", "Just steps.")
+
+
+def test_a_rejected_tool_call_goes_back_to_the_model(ws):
+    import httpx
+    import openai
+
+    class Rejects(FakeLLM):
+        def chat(self, messages, tools):
+            if not self.sent:
+                self.sent.append(messages)
+                response = httpx.Response(400, request=httpx.Request("POST", "http://model"))
+                raise openai.BadRequestError("attempted to call tool 'edit_file' which was not in request.tools",
+                                             response=response, body=None)
+            return super().chat(messages, tools)
+
+    ws.mode = "plan"
+    llm = Rejects(say("Plan: 1. change total to add."))
+    assert Agent(llm, ws).ask("make a plan") == "Plan: 1. change total to add."
+    note = llm.sent[1][-1]["content"]
+    assert "rejected" in note and "read_file" in note and "edit_file, " not in note
+
+
+def test_changed_files_must_be_checked_before_done(ws):
+    llm = FakeLLM(call("read_file", path="app.py"),
+                  call("edit_file", 1, path="app.py", old_text="a - b", new_text="a + b"),
+                  say("Fixed. All tests pass."),                   # it never ran them
+                  call("run_command", 2, command="python -m pytest -q"),
+                  say("Fixed and checked: tests pass."))
+    assert Agent(llm, ws).ask("fix it") == "Fixed and checked: tests pass."
+    assert "have not run anything since" in llm.sent[3][-1]["content"]

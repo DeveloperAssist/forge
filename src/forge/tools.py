@@ -195,6 +195,7 @@ def edit_file(ws: Workspace, path: str, old_text: str, new_text: str) -> str:
     diff = show_diff(path, old, new)
     if not ws.may_edit(f"Edit {path}", diff):
         return "The user said no to this edit. Ask them what they want instead."
+    ws.last_exit = None  # any earlier test result is out of date now
     full.write_text(new, encoding="utf-8")
     ws.seen[full] = full.stat().st_mtime
     ws.changed.add(path)
@@ -216,6 +217,7 @@ def write_file(ws: Workspace, path: str, content: str) -> str:
     diff = show_diff(path, old, content)
     if not ws.may_edit(f"{'Rewrite' if old else 'Create'} {path}", diff):
         return "The user said no to this file. Ask them what they want instead."
+    ws.last_exit = None  # any earlier test result is out of date now
     full.parent.mkdir(parents=True, exist_ok=True)
     full.write_text(content, encoding="utf-8")
     ws.seen[full] = full.stat().st_mtime
