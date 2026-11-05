@@ -8,7 +8,7 @@ from rich.syntax import Syntax
 console = Console(highlight=False)
 
 ARG_SHOWN = {"read_file": "path", "list_files": "path", "search": "pattern", "edit_file": "path",
-             "write_file": "path", "run_command": "command"}
+             "write_file": "path", "run_command": "command", "explore": "question", "use_skill": "name"}
 
 
 class Screen:
@@ -29,6 +29,19 @@ class Screen:
         self.stop_spinner()
         if kind == "note":
             console.print(f"[dim]{d['text']}[/]")
+        elif kind == "plan":
+            marks = {"[x]": "[green]✔[/]", "[>]": "[yellow]▸[/]", "[ ]": "[dim]○[/]"}
+            for line in d["text"].splitlines():
+                mark = next((v for k, v in marks.items() if line.strip().startswith(k)), "•")
+                console.print(f"  {mark} {line.strip()[3:].strip() if mark != '•' else line.strip()}")
+        elif kind == "compact":
+            console.print(f"[dim]context was {d['before']:,} tokens: older parts summarised to make room[/]")
+        elif kind in ("helper_tool_call", "helper_tool_result"):
+            if kind == "helper_tool_call":
+                key = ARG_SHOWN.get(d["name"])
+                console.print(f"    [dim]↳ helper: {d['name']} {d['args'].get(key, '') if key else ''}[/]")
+        elif kind == "check":
+            console.print(f"[bold magenta]✗ check:[/] [magenta]{d['text'][:160]}[/]")
         elif kind == "tool_call":
             key = ARG_SHOWN.get(d["name"])
             shown = d["args"].get(key, "") if key else ""

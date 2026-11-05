@@ -8,6 +8,7 @@ import re
 import subprocess
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 
 from .safety import ToolError, Workspace
 
@@ -92,6 +93,8 @@ def list_files(ws: Workspace, path: str = ".") -> str:
     path: folder to list, relative to the project folder
     """
     start = ws.path(path)
+    if not start.is_dir():
+        raise ToolError(f"There is no folder {path}. You are already inside the project: use . for the top.")
     found = [ws.rel(ws.path(f)) for f in walk(ws, start)]
     if len(found) > 300:
         return "\n".join(found[:300]) + f"\n… and {len(found) - 300} more. List a sub-folder to see them."
@@ -111,13 +114,15 @@ def search(ws: Workspace, pattern: str, path: str = ".", files: str = "*") -> st
     except re.error as e:
         raise ToolError(f"Bad regular expression: {e}") from None
     start = ws.path(path)
+    if not start.exists():
+        raise ToolError(f"There is no file or folder {path}. You are already inside the project: use . for the top.")
     targets = [str(start)] if start.is_file() else walk(ws, start)
     hits = []
     for f in targets:
         if not fnmatch.fnmatch(os.path.basename(f), files):
             continue
         try:
-            text = open(f, encoding="utf-8").read()
+            text = Path(f).read_text(encoding="utf-8")
         except (UnicodeDecodeError, OSError):
             continue
         for n, line in enumerate(text.splitlines(), 1):
@@ -132,6 +137,30 @@ def search(ws: Workspace, pattern: str, path: str = ".", files: str = "*") -> st
 def show_diff(path: str, old: str, new: str) -> str:
     lines = difflib.unified_diff(old.splitlines(), new.splitlines(), f"a/{path}", f"b/{path}", lineterm="", n=2)
     return "\n".join(lines)
+
+
+NUMBERED = re.compile(r"^\s*\d+│ ?", re.M)
+
+
+def unnumber(text: str) -> str:
+    """Small models often copy read_file's line numbers into old_text. If every line has one, take them off."""
+    lines = [ln for ln in text.splitlines() if ln.strip()]
+    if lines and all(NUMBERED.match(ln) for ln in lines):
+        return NUMBERED.sub("", text)
+    return text
+
+
+def closest(old: str, wanted: str) -> str:
+    """The lines of the file that look most like what the model tried to replace: a hint for its next try."""
+    file_lines, n = old.splitlines(), max(1, len(wanted.splitlines()))
+    best, best_at = 0.0, 0
+    for i in range(max(1, len(file_lines) - n + 1)):
+        score = difflib.SequenceMatcher(None, "\n".join(file_lines[i:i + n]), wanted).ratio()
+        if score > best:
+            best, best_at = score, i
+    if best < 0.5:
+        return ""
+    return "\nThe closest text in the file is:\n" + "\n".join(file_lines[best_at:best_at + n])
 
 
 def check_fresh(ws: Workspace, full) -> None:
@@ -155,9 +184,11 @@ def edit_file(ws: Workspace, path: str, old_text: str, new_text: str) -> str:
         raise ToolError(f"{path} does not exist. Use write_file to create it.")
     check_fresh(ws, full)
     old = full.read_text(encoding="utf-8")
+    old_text, new_text = unnumber(old_text), unnumber(new_text)
     count = old.count(old_text)
     if count == 0:
-        raise ToolError(f"old_text was not found in {path}. Copy it exactly from read_file (no line numbers).")
+        raise ToolError(f"old_text was not found in {path}. Copy it exactly, spaces included, without line numbers."
+                        + closest(old, old_text))
     if count > 1:
         raise ToolError(f"old_text appears {count} times in {path}. Add more surrounding lines to pick one.")
     new = old.replace(old_text, new_text)
@@ -166,6 +197,7 @@ def edit_file(ws: Workspace, path: str, old_text: str, new_text: str) -> str:
         return "The user said no to this edit. Ask them what they want instead."
     full.write_text(new, encoding="utf-8")
     ws.seen[full] = full.stat().st_mtime
+    ws.changed.add(path)
     return f"Edited {path}.\n{diff}"
 
 
@@ -187,6 +219,7 @@ def write_file(ws: Workspace, path: str, content: str) -> str:
     full.parent.mkdir(parents=True, exist_ok=True)
     full.write_text(content, encoding="utf-8")
     ws.seen[full] = full.stat().st_mtime
+    ws.changed.add(path)
     return f"Wrote {path} ({len(content.splitlines())} lines)."
 
 
@@ -206,7 +239,46 @@ def run_command(ws: Workspace, command: str, timeout: int = 120) -> str:
     except subprocess.TimeoutExpired:
         return f"Stopped after {timeout} s. If it waits for input or runs a server, it cannot run here."
     out = (p.stdout + ("\n" + p.stderr if p.stderr else "")).strip()
+    ws.last_exit = p.returncode
     return cut(f"exit code {p.returncode}\n{out}")
+
+
+# --------------------------------------------------------------------------------------------------- thinking tools
+@tool("read")
+def update_plan(ws: Workspace, plan: str) -> str:
+    """Write or update your step-by-step plan for this task, so the user can follow along. Use it for any task
+    with three or more steps, and tick steps off as you finish them.
+
+    plan: one step per line, starting with [ ] to do, [>] doing now, or [x] done
+    """
+    ws.plan = plan.strip()
+    return "Plan updated."
+
+
+@tool("agent")
+def explore(ws: Workspace, question: str) -> str:
+    """Send a helper agent to look around the code and answer a question, e.g. "where is the login handled and
+    which files does it touch?". It reads in its own fresh context and returns only a short answer, so your
+    context stays small. Use it for broad searches across many files.
+
+    question: what you want to know about the code
+    """
+    if ws.explore is None:
+        raise ToolError("Helpers cannot start their own helpers. Search the code yourself.")
+    return ws.explore(question)
+
+
+@tool("read")
+def use_skill(ws: Workspace, name: str) -> str:
+    """Load a skill: step-by-step instructions written for this kind of task. The skills you have are listed in
+    your instructions. Load one when the task matches it, then follow it.
+
+    name: the skill's name
+    """
+    skill = ws.skills.get(name)
+    if skill is None:
+        raise ToolError(f"No skill called {name}. Skills: {', '.join(ws.skills) or 'none'}.")
+    return skill.body
 
 
 def run_tool(ws: Workspace, name: str, args: dict) -> str:
@@ -224,5 +296,15 @@ def run_tool(ws: Workspace, name: str, args: dict) -> str:
         return f"Error: {e}"
 
 
-def schemas(mode: str) -> list[dict]:
-    return [t.schema for t in REGISTRY.values() if mode != "plan" or t.kind == "read"]
+def schemas(ws: Workspace) -> list[dict]:
+    """The tools the model may see right now: plan mode and helpers only get the read tools."""
+    out = []
+    for t in REGISTRY.values():
+        if ws.mode == "plan" and t.kind in ("edit", "run"):
+            continue
+        if t.kind == "agent" and ws.explore is None:
+            continue
+        if t.name == "use_skill" and not ws.skills:
+            continue
+        out.append(t.schema)
+    return out

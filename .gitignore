@@ -13,3 +13,4 @@ wheels/
 .forge/
 # internal notes for the owner (status, business decisions): kept local, not published
 SPEC.md
+.run_*.txt

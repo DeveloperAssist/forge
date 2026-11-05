@@ -37,6 +37,11 @@ class Workspace:
         self.approve = approve
         self.allow_commands = allow_commands
         self.seen: dict[Path, float] = {}  # files the model has read, and when: no blind edits
+        self.changed: set[str] = set()  # files changed in this task
+        self.last_exit: int | None = None  # exit code of the last command it ran
+        self.plan = ""  # the model's visible to-do list
+        self.explore = None  # set by the agent: starts a read-only helper agent
+        self.skills: dict = {}  # name -> Skill, from .forge/skills/
 
     def path(self, p: str) -> Path:
         """Turn the model's path into a real one, and refuse anything outside the project folder."""
