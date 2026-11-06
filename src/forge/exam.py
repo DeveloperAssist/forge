@@ -96,6 +96,9 @@ def main() -> None:
     if args.only:
         tasks = [t for t in tasks if args.only in t.name]
     s = config.load(root, provider=args.provider, model=args.model, mode="auto")
+    warning = config.fit_to_model(s)
+    if warning:
+        print(warning)
     out = root / "evals" / "results" / f"{args.set}-{s.provider}-{s.model.replace('/', '_').replace(':', '_')}"
     out.mkdir(parents=True, exist_ok=True)
     rows = []

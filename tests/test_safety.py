@@ -41,3 +41,16 @@ def test_plan_mode_refuses_edits_and_commands(ws):
         ws.may_edit("Edit app.py", "")
     with pytest.raises(ToolError):
         ws.may_run("python -m pytest")
+
+
+def test_local_budget_follows_the_model_window(monkeypatch):
+    from forge import config, local_models
+
+    s = config.Settings(provider="ollama", model="forge-8b")
+    monkeypatch.setattr(local_models, "window", lambda m: 8192)
+    assert config.fit_to_model(s) == "" and s.context_budget == 5324
+    s = config.Settings(provider="ollama", model="qwen3:8b")
+    monkeypatch.setattr(local_models, "window", lambda m: 4096)
+    assert "silently forget" in config.fit_to_model(s)
+    monkeypatch.setattr(local_models, "window", lambda m: None)
+    assert "forge setup" in config.fit_to_model(config.Settings(provider="ollama", model="nope"))

@@ -29,6 +29,9 @@ folders and files, and code conventions you notice. Under 40 lines. Check every 
 
 def build(root: Path, args) -> Agent:
     s = config.load(root, provider=args.provider, model=args.model, mode=args.mode)
+    warning = config.fit_to_model(s)
+    if warning:
+        console.print(f"[yellow]{warning}[/]")
     screen = Screen()
     ws = Workspace(root, s.mode, screen.approve, s.allow_commands)
     ws.skills = skills.load(ws.root)
@@ -101,12 +104,15 @@ def repl(agent: Agent) -> None:
 
 def main() -> None:
     p = argparse.ArgumentParser(prog="forge", description="A coding agent for your terminal.")
-    p.add_argument("prompt", nargs="*", help="run one task and exit, e.g. forge fix the failing test")
+    p.add_argument("prompt", nargs="*", help="run one task and exit, e.g. forge fix the failing test (or: forge setup)")
     p.add_argument("--provider", choices=list(config.PROVIDERS))
     p.add_argument("--model")
     p.add_argument("--mode", choices=config.MODES)
     p.add_argument("--dir", default=".", help="the project folder (default: here)")
     args = p.parse_args()
+    if args.prompt == ["setup"]:  # forge setup: make the local models with a big enough window
+        from .local_models import setup
+        raise SystemExit(0 if setup() else 1)
     agent = build(Path(args.dir), args)
     if args.prompt:
         agent.ask(" ".join(args.prompt))

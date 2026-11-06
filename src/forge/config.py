@@ -10,7 +10,7 @@ from pathlib import Path
 
 # Both speak the OpenAI chat API, so one client works for either.
 PROVIDERS = {
-    "ollama": {"base_url": "http://localhost:11434/v1", "model": "qwen3:8b", "key_env": None},
+    "ollama": {"base_url": "http://localhost:11434/v1", "model": "forge-8b", "key_env": None},  # forge setup
     "groq": {"base_url": "https://api.groq.com/openai/v1", "model": "openai/gpt-oss-120b", "key_env": "GROQ_API_KEY"},
 }
 
@@ -64,3 +64,20 @@ def load(root: Path, **overrides) -> Settings:
         raise SystemExit(f"Unknown mode {s.mode!r}: use one of {', '.join(MODES)}")
     s.model = s.model or PROVIDERS[s.provider]["model"]
     return s
+
+
+def fit_to_model(s: Settings) -> str:
+    """For local models: size the context budget to the model's real window. Returns a warning, or ""."""
+    if s.provider != "ollama":
+        return ""
+    from .local_models import DEFAULT_WINDOW, budget_for, window
+
+    n_ctx = window(s.model)
+    if n_ctx is None:
+        return (f"Ollama has no model {s.model!r} (or is not running). Run `forge setup` once, "
+                "or pick one with --model.")
+    s.context_budget = min(s.context_budget, budget_for(n_ctx))
+    if n_ctx <= DEFAULT_WINDOW:
+        return (f"{s.model} has only a {n_ctx:,}-token window: on long tasks it will silently forget the task. "
+                "Run `forge setup` and use forge-8b or forge-4b.")
+    return ""
