@@ -20,7 +20,7 @@ from .llm import LLM
 from .safety import Workspace
 from .trace import Trace
 
-HIDDEN = {"hidden_tests", "solution", "grading.md", "task.md", "__pycache__", ".pytest_cache"}
+HIDDEN = {"hidden_tests", "solution", "bad_fix", "grading.md", "task.md", "__pycache__", ".pytest_cache"}
 
 
 def hidden_pass(folder: Path, task: Path) -> tuple[bool, str]:
