@@ -75,6 +75,7 @@ class LLM:
 
     on_wait = None    # on_wait(seconds): the screen shows "free-tier limit, waiting..."
     on_switch = None  # on_switch(provider, model, reason): the screen shows which model takes over
+    max_wait = MAX_WAIT  # the exam runs unattended, so it may wait longer than a person would
 
     def __init__(self, settings: Settings):
         self.settings = settings
@@ -105,7 +106,7 @@ class LLM:
         return True
 
     def chat(self, messages: list[dict], tools: list[dict]) -> Reply:
-        for _ in range(12):
+        for _ in range(40):
             extra = {"reasoning_effort": "none"} if self.provider == "ollama" else {}  # qwen3: no thinking aloud
             try:
                 r = self.client().chat.completions.create(
@@ -122,7 +123,7 @@ class LLM:
                     time.sleep(secs + 1)
                 elif self.next_provider(f"{self.provider} free limit reached"):  # daily limit: next provider
                     continue
-                elif secs is None or secs <= MAX_WAIT:  # nowhere else to go: wait (30 s if it did not say)
+                elif secs is None or secs <= self.max_wait:  # nowhere else to go: wait (30 s if it did not say)
                     secs = 30.0 if secs is None else secs
                     if self.on_wait:
                         self.on_wait(secs)

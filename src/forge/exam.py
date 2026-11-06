@@ -46,7 +46,9 @@ def run_task(task: Path, settings: config.Settings, out: Path) -> dict:
         trace.event(kind, **d)
 
     ws = Workspace(work, "auto", lambda *a: True, settings.allow_commands)  # a throwaway copy: say yes to all
-    agent = Agent(LLM(settings), ws, settings.max_steps, listen, settings.context_budget)
+    llm = LLM(settings)
+    llm.max_wait = 65 * 60  # unattended: an hourly limit may make us wait up to an hour
+    agent = Agent(llm, ws, settings.max_steps, listen, settings.context_budget)
     start = time.perf_counter()
     try:
         answer, error = agent.ask((task / "task.md").read_text(encoding="utf-8").strip()), ""
