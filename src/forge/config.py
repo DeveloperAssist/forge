@@ -15,7 +15,7 @@ PROVIDERS = {
              "key_env": "GROQ_API_KEY", "signup": "console.groq.com"},
     "cerebras": {"base_url": "https://api.cerebras.ai/v1", "model": "gpt-oss-120b",
                  "key_env": "CEREBRAS_API_KEY", "signup": "cloud.cerebras.ai"},
-    "gemini": {"base_url": "https://generativelanguage.googleapis.com/v1beta/openai/", "model": "gemini-2.5-flash",
+    "gemini": {"base_url": "https://generativelanguage.googleapis.com/v1beta/openai/", "model": "gemini-3.5-flash",
                "key_env": "GEMINI_API_KEY", "signup": "aistudio.google.com"},
     "openrouter": {"base_url": "https://openrouter.ai/api/v1", "model": "openai/gpt-oss-120b:free",
                    "key_env": "OPENROUTER_API_KEY", "signup": "openrouter.ai"},
