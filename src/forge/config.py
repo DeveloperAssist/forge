@@ -8,7 +8,8 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# Every one of these speaks the OpenAI chat API, so one client works for all of them. All have a free tier.
+# Every one of these speaks the OpenAI chat API, so one client works for all of them.
+# Groq, Gemini and OpenRouter have a free tier; Cerebras is a paid trial.
 # When one runs out of free quota, Forge moves to the next one in `fallbacks` that you have a key for.
 PROVIDERS = {
     "groq": {"base_url": "https://api.groq.com/openai/v1", "model": "openai/gpt-oss-120b",
