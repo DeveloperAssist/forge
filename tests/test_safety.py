@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from forge.safety import ToolError, blocked
@@ -5,7 +7,11 @@ from forge.safety import ToolError, blocked
 
 def test_paths_stay_inside_the_project(ws):
     assert ws.path("app.py") == ws.root / "app.py"
-    for bad in ("../secret.txt", "C:/Windows/system.ini", "tests/../../x"):
+    outside = str(ws.root.parent / "secret.txt")  # an absolute path outside the project, on any OS
+    bad_paths = ["../secret.txt", outside, "tests/../../x"]
+    if sys.platform == "win32":
+        bad_paths.append("C:/Windows/system.ini")  # only absolute on Windows
+    for bad in bad_paths:
         with pytest.raises(ToolError):
             ws.path(bad)
 
