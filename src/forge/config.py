@@ -36,12 +36,6 @@ PROVIDERS = {
         "key_env": "OPENROUTER_API_KEY",
         "signup": "openrouter.ai",
     },
-    "ollama": {
-        "base_url": "http://localhost:11434/v1",
-        "model": "forge-8b",  # optional: needs a GPU, forge setup
-        "key_env": None,
-        "signup": "ollama.com",
-    },
 }
 
 MODES = ("plan", "ask", "auto")  # plan = read only · ask = approve every change · auto = edits run, commands ask
@@ -129,21 +123,3 @@ def load(root: Path, **overrides) -> Settings:
         raise SystemExit(f"Unknown mode {s.mode!r}: use one of {', '.join(MODES)}")
     s.model = s.model or PROVIDERS[s.provider]["model"]
     return s
-
-
-def fit_to_model(s: Settings) -> str:
-    """For local models: size the context budget to the model's real window. Returns a warning, or ""."""
-    if s.provider != "ollama":
-        return ""
-    from .local_models import DEFAULT_WINDOW, budget_for, window
-
-    n_ctx = window(s.model)
-    if n_ctx is None:
-        return f"Ollama has no model {s.model!r} (or is not running). Run `forge setup` once, or pick one with --model."
-    s.context_budget = min(s.context_budget, budget_for(n_ctx))
-    if n_ctx <= DEFAULT_WINDOW:
-        return (
-            f"{s.model} has only a {n_ctx:,}-token window: on long tasks it will silently forget the task. "
-            "Run `forge setup` and use forge-8b or forge-4b."
-        )
-    return ""

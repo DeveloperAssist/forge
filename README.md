@@ -113,8 +113,8 @@ more than one day of Groq's free limit. Still failing: 06 (SGPA division) and 07
 
 What the failures taught us, and what changed:
 
-1. **Agents fix the visible test, not the rule.** Every failure said "all tests pass", and the visible tests did pass.
-   The hidden tests failed.
+1. **"All tests pass" is not the same as fixed.** Both failures said all tests pass, and the visible tests did pass.
+   In task 06 the agent fixed the SGPA function the task named, and missed the same bug in the CGPA function next to it.
 2. **Told "don't change any code, just explain", the model changed the code** so that a wrong test would pass.
    Forge now runs such requests read-only, and its rules say: never change correct code to pass a wrong test.
 
@@ -132,7 +132,7 @@ Results are saved in `evals/results/`. A task stopped by a rate limit is shown a
 ## Tests
 
 ```bash
-uv run pytest        # 60 offline tests, with a fake model: no key, no internet
+uv run pytest        # 59 offline tests, with a fake model: no key, no internet
 uv run ruff check
 ```
 

@@ -136,14 +136,12 @@ class LLM:
     def chat(self, messages: list[dict], tools: list[dict]) -> Reply:
         """One model call. Per-minute limits are waited out; daily limits switch to the next free provider."""
         for _ in range(40):
-            extra = {"reasoning_effort": "none"} if self.provider == "ollama" else {}  # qwen3: no thinking aloud
             try:
                 r = self.client().chat.completions.create(
                     model=self.model,
                     messages=for_provider(messages, self.provider),
                     tools=tools or None,
                     temperature=0.2,
-                    **extra,
                 )
                 break
             except (openai.RateLimitError, openai.APIStatusError) as e:

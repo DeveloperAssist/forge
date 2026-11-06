@@ -102,9 +102,6 @@ def main() -> None:
     s = config.load(root, provider=args.provider, model=args.model, mode="auto")
     if not args.fallback:
         s.fallbacks = []  # an exam scores ONE model: a switch would mix two models in one score
-    warning = config.fit_to_model(s)
-    if warning:
-        print(warning)
     out = root / "evals" / "results" / f"{args.set}-{s.provider}-{s.model.replace('/', '_').replace(':', '_')}"
     out.mkdir(parents=True, exist_ok=True)
     rows = []
