@@ -32,8 +32,11 @@ class Reply:
         msg = {"role": "assistant", "content": self.text}
         if self.tool_calls:
             msg["tool_calls"] = [
-                {"id": c.id, "type": "function",
-                 "function": {"name": c.name, "arguments": c.bad_args or json.dumps(c.args)}}
+                {
+                    "id": c.id,
+                    "type": "function",
+                    "function": {"name": c.name, "arguments": c.bad_args or json.dumps(c.args)},
+                }
                 | ({"extra_content": c.extra} if c.extra else {})
                 for c in self.tool_calls
             ]
@@ -42,7 +45,7 @@ class Reply:
 
 THINK = re.compile(r"<think>.*?</think>", re.S)
 MAX_WAIT = 20 * 60  # longer than this, give up and tell the user
-SHORT_WAIT = 90     # shorter than this, wait on the same provider instead of switching
+SHORT_WAIT = 90  # shorter than this, wait on the same provider instead of switching
 
 
 def limited(e: Exception) -> bool:
@@ -66,14 +69,35 @@ def retry_after(e: Exception) -> float | None:
     """Some servers put the wait in the Retry-After header instead of the message."""
     try:
         return float(e.response.headers.get("retry-after"))
-    except (AttributeError, TypeError, ValueError):
+    except AttributeError, TypeError, ValueError:
         return None
+
+
+SKIP_SIGNATURE = {"google": {"thought_signature": "skip_thought_signature_validator"}}
+
+
+def for_provider(messages: list[dict], provider: str) -> list[dict]:
+    """Gemini refuses a conversation whose earlier tool calls carry no thought signature, and calls made by
+    another provider (before a switch) never have one. Google's documented placeholder lets them through."""
+    if provider != "gemini":
+        return messages
+    out = []
+    for m in messages:
+        if m.get("tool_calls") and any("extra_content" not in c for c in m["tool_calls"]):
+            m = {
+                **m,
+                "tool_calls": [
+                    c if "extra_content" in c else {**c, "extra_content": SKIP_SIGNATURE} for c in m["tool_calls"]
+                ],
+            }
+        out.append(m)
+    return out
 
 
 class LLM:
     """Talks to the first provider in the chain; when its free quota runs out, moves to the next one."""
 
-    on_wait = None    # on_wait(seconds): the screen shows "free-tier limit, waiting..."
+    on_wait = None  # on_wait(seconds): the screen shows "free-tier limit, waiting..."
     on_switch = None  # on_switch(provider, model, reason): the screen shows which model takes over
     max_wait = MAX_WAIT  # the exam runs unattended, so it may wait longer than a person would
 
@@ -93,8 +117,12 @@ class LLM:
 
     def client(self) -> OpenAI:
         if self.provider not in self.clients:
-            self.clients[self.provider] = OpenAI(base_url=PROVIDERS[self.provider]["base_url"],
-                                                 api_key=api_key(self.provider), max_retries=2, timeout=300)
+            self.clients[self.provider] = OpenAI(
+                base_url=PROVIDERS[self.provider]["base_url"],
+                api_key=api_key(self.provider),
+                max_retries=2,
+                timeout=300,
+            )
         return self.clients[self.provider]
 
     def next_provider(self, reason: str) -> bool:
@@ -106,11 +134,16 @@ class LLM:
         return True
 
     def chat(self, messages: list[dict], tools: list[dict]) -> Reply:
+        """One model call. Per-minute limits are waited out; daily limits switch to the next free provider."""
         for _ in range(40):
             extra = {"reasoning_effort": "none"} if self.provider == "ollama" else {}  # qwen3: no thinking aloud
             try:
                 r = self.client().chat.completions.create(
-                    model=self.model, messages=messages, tools=tools or None, temperature=0.2, **extra,
+                    model=self.model,
+                    messages=for_provider(messages, self.provider),
+                    tools=tools or None,
+                    temperature=0.2,
+                    **extra,
                 )
                 break
             except (openai.RateLimitError, openai.APIStatusError) as e:

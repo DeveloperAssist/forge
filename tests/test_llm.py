@@ -87,6 +87,20 @@ def test_gemini_thought_signature_goes_back():
     assert "extra_content" not in Reply("", [ToolCall("2", "read_file", {})]).as_message()["tool_calls"][0]
 
 
+def test_tool_calls_from_another_provider_get_a_placeholder_signature_for_gemini():
+    # found on 2026-11-06: Groq ran out mid-task, Forge switched to Gemini, and Gemini answered 400
+    from forge.llm import SKIP_SIGNATURE, Reply, ToolCall, for_provider
+
+    own = Reply("", [ToolCall("1", "read_file", {}, "", {"google": {"thought_signature": "abc"}})]).as_message()
+    groq = Reply("", [ToolCall("2", "read_file", {"path": "a.py"})]).as_message()
+    history = [{"role": "user", "content": "hi"}, own, groq]
+    sent = for_provider(history, "gemini")
+    assert sent[1]["tool_calls"][0]["extra_content"]["google"]["thought_signature"] == "abc"
+    assert sent[2]["tool_calls"][0]["extra_content"] == SKIP_SIGNATURE
+    assert "extra_content" not in groq["tool_calls"][0]  # the history itself is not changed
+    assert for_provider(history, "groq") is history
+
+
 def test_limit_without_a_wait_time_and_no_fallback_waits(monkeypatch):
     clients = {"groq": FakeClient(limit_error("Too many requests"), ok("after a wait"))}
     llm = make(monkeypatch, clients, keys=("GROQ_API_KEY",))
