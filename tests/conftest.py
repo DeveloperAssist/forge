@@ -10,9 +10,11 @@ class FakeLLM:
     def __init__(self, *replies: Reply):
         self.replies = list(replies)
         self.sent: list[list[dict]] = []
+        self.tools_seen: list[list[dict]] = []
 
     def chat(self, messages, tools):
         self.sent.append([dict(m) for m in messages])
+        self.tools_seen.append(tools)
         return self.replies.pop(0)
 
 

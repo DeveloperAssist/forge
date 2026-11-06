@@ -174,3 +174,22 @@ def test_repeating_the_same_call_is_pointed_out(ws):
     Agent(llm, ws).ask("find it")
     results = [m["content"] for m in llm.sent[2] if m["role"] == "tool"]
     assert "exact call" not in results[0] and "exact call 2 times" in results[1]
+
+
+def test_explain_only_requests_run_read_only(ws):
+    llm = FakeLLM(say("The test expects Western grouping; the code is right."))
+    agent = Agent(llm, ws)
+    agent.ask("test_big_amount fails. Don't change any code yet, just explain.")
+    names = [t["function"]["name"] for t in llm.tools_seen[0]]
+    assert "edit_file" not in names and "run_command" not in names and "read_file" in names
+    assert ws.mode == "auto"  # back to normal afterwards
+
+
+def test_read_only_phrases_are_narrow():
+    from forge.agent import READ_ONLY_ASK
+
+    for text in ["Don't change any code yet, just explain.", "just explain why", "do not edit anything",
+                 "dont fix it, tell me why"]:
+        assert READ_ONLY_ASK.search(text), text
+    for text in ["fix the bug but don't change the tests", "rename it and don't touch the README"]:
+        assert not READ_ONLY_ASK.search(text), text

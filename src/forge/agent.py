@@ -18,6 +18,13 @@ Keep: the user's goal, decisions made, files changed (and how), commands run and
 to do, and any exact names (files, functions, errors) you will need. Short bullet points, no greetings."""
 
 
+# "don't change any code", "do not edit anything", "just explain", "don't fix it yet": the user wants words, not edits.
+# Kept narrow on purpose: "fix it but don't change the tests" must still be allowed to edit.
+READ_ONLY_ASK = re.compile(
+    r"\b(don'?t|do not|dont)\s+(change|edit|modify|touch)\s+(any\s+code|anything|the\s+code|code|any\s+files?)\b"
+    r"|\b(just|only)\s+explain\b|\b(don'?t|do not|dont)\s+fix\b", re.I)
+
+
 class Agent:
     def __init__(self, llm: LLM, ws: Workspace, max_steps: int = 40, on_event: Event | None = None,
                  context_budget: int = 24_000, checkpoints: Checkpoints | None = None, helper: bool = False):
@@ -38,6 +45,17 @@ class Agent:
 
     # ------------------------------------------------------------------------------------------------ the loop
     def ask(self, user_text: str) -> str:
+        """Run one task. If the user said "don't change any code" or "just explain", it runs read-only."""
+        if self.ws.mode == "plan" or not READ_ONLY_ASK.search(user_text):
+            return self._ask(user_text)
+        saved, self.ws.mode = self.ws.mode, "plan"
+        self.on_event("check", text="You asked me not to change anything: this task is read-only.")
+        try:
+            return self._ask(user_text)
+        finally:
+            self.ws.mode = saved
+
+    def _ask(self, user_text: str) -> str:
         if self.checkpoints:
             self.checkpoints.snapshot(user_text)  # /undo comes back to here
         # the system prompt is rebuilt every turn: the mode, git status, FORGE.md or skills may have changed
