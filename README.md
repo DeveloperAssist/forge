@@ -1,6 +1,6 @@
 # Forge: build your own coding agent in Python
 
-Forge is a small coding agent that runs in your terminal, in the style of Claude Code. You give it a task, like
+Forge is a small AI coding agent that runs in your terminal. You give it a task, like
 "fix the failing test". It reads your files, edits them, runs the tests, and checks the result before it says "done".
 
 - **No agent framework.** About 1,400 lines of plain Python: one loop, one list of tools, one model client.
@@ -63,7 +63,7 @@ uv run forge --mode plan --dir my_project         # read-only: it can look but n
 | `/tokens` | How full the conversation (context) is |
 | `/clear`, `/exit` | Forget the conversation; quit |
 
-Options: `--provider groq|gemini|openrouter|cerebras|ollama`, `--model NAME`, `--mode`, `--dir`.
+Options: `--provider groq|gemini|openrouter`, `--model NAME`, `--mode`, `--dir`.
 
 ## How it works
 
@@ -117,9 +117,6 @@ What the failures taught us, and what changed:
    The hidden tests failed.
 2. **Told "don't change any code, just explain", the model changed the code** so that a wrong test would pass.
    Forge now runs such requests read-only, and its rules say: never change correct code to pass a wrong test.
-3. **Local models need a big enough window.** Ollama gives every model 4,096 tokens by default and silently drops
-   the oldest part: the task itself. A local 8B model scored 3–4 / 20. That's why the free online models are the
-   default. (Optional: `uv run forge setup` creates local models with a bigger window for an 8 GB GPU.)
 
 Run the exam yourself:
 

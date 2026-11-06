@@ -12,16 +12,36 @@ from pathlib import Path
 # Groq, Gemini and OpenRouter have a free tier; Cerebras is a paid trial.
 # When one runs out of free quota, Forge moves to the next one in `fallbacks` that you have a key for.
 PROVIDERS = {
-    "groq": {"base_url": "https://api.groq.com/openai/v1", "model": "openai/gpt-oss-120b",
-             "key_env": "GROQ_API_KEY", "signup": "console.groq.com"},
-    "cerebras": {"base_url": "https://api.cerebras.ai/v1", "model": "gpt-oss-120b",
-                 "key_env": "CEREBRAS_API_KEY", "signup": "cloud.cerebras.ai"},
-    "gemini": {"base_url": "https://generativelanguage.googleapis.com/v1beta/openai/", "model": "gemini-3.5-flash",
-               "key_env": "GEMINI_API_KEY", "signup": "aistudio.google.com"},
-    "openrouter": {"base_url": "https://openrouter.ai/api/v1", "model": "openai/gpt-oss-120b:free",
-                   "key_env": "OPENROUTER_API_KEY", "signup": "openrouter.ai"},
-    "ollama": {"base_url": "http://localhost:11434/v1", "model": "forge-8b",  # optional: needs a GPU, forge setup
-               "key_env": None, "signup": "ollama.com"},
+    "groq": {
+        "base_url": "https://api.groq.com/openai/v1",
+        "model": "openai/gpt-oss-120b",
+        "key_env": "GROQ_API_KEY",
+        "signup": "console.groq.com",
+    },
+    "cerebras": {
+        "base_url": "https://api.cerebras.ai/v1",
+        "model": "gpt-oss-120b",
+        "key_env": "CEREBRAS_API_KEY",
+        "signup": "cloud.cerebras.ai",
+    },
+    "gemini": {
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "model": "gemini-3.5-flash",
+        "key_env": "GEMINI_API_KEY",
+        "signup": "aistudio.google.com",
+    },
+    "openrouter": {
+        "base_url": "https://openrouter.ai/api/v1",
+        "model": "openai/gpt-oss-120b:free",
+        "key_env": "OPENROUTER_API_KEY",
+        "signup": "openrouter.ai",
+    },
+    "ollama": {
+        "base_url": "http://localhost:11434/v1",
+        "model": "forge-8b",  # optional: needs a GPU, forge setup
+        "key_env": None,
+        "signup": "ollama.com",
+    },
 }
 
 MODES = ("plan", "ask", "auto")  # plan = read only · ask = approve every change · auto = edits run, commands ask
@@ -36,10 +56,20 @@ class Settings:
     context_budget: int = 24_000  # tokens we let the conversation grow to before compacting
     # cerebras is not in the list: since July 2026 it is a card-only $5 trial, not a free tier
     fallbacks: list[str] = field(default_factory=lambda: ["groq", "gemini", "openrouter"])
-    allow_commands: list[str] = field(default_factory=lambda: [
-        "pytest", "python -m pytest", "uv run pytest", "ruff", "uv run ruff",
-        "git status", "git diff", "git log", "ls", "dir",
-    ])
+    allow_commands: list[str] = field(
+        default_factory=lambda: [
+            "pytest",
+            "python -m pytest",
+            "uv run pytest",
+            "ruff",
+            "uv run ruff",
+            "git status",
+            "git diff",
+            "git log",
+            "ls",
+            "dir",
+        ]
+    )
 
     def chain(self) -> list[tuple[str, str]]:
         """(provider, model) pairs to try in order: the one you picked first, then the fallbacks you have keys for."""
@@ -109,10 +139,11 @@ def fit_to_model(s: Settings) -> str:
 
     n_ctx = window(s.model)
     if n_ctx is None:
-        return (f"Ollama has no model {s.model!r} (or is not running). Run `forge setup` once, "
-                "or pick one with --model.")
+        return f"Ollama has no model {s.model!r} (or is not running). Run `forge setup` once, or pick one with --model."
     s.context_budget = min(s.context_budget, budget_for(n_ctx))
     if n_ctx <= DEFAULT_WINDOW:
-        return (f"{s.model} has only a {n_ctx:,}-token window: on long tasks it will silently forget the task. "
-                "Run `forge setup` and use forge-8b or forge-4b.")
+        return (
+            f"{s.model} has only a {n_ctx:,}-token window: on long tasks it will silently forget the task. "
+            "Run `forge setup` and use forge-8b or forge-4b."
+        )
     return ""

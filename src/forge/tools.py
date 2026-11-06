@@ -12,8 +12,21 @@ from pathlib import Path
 
 from .safety import ToolError, Workspace
 
-SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__", ".forge", ".pytest_cache", ".ruff_cache",
-             "dist", "build", ".mypy_cache", ".idea", ".vscode"}
+SKIP_DIRS = {
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "__pycache__",
+    ".forge",
+    ".pytest_cache",
+    ".ruff_cache",
+    "dist",
+    "build",
+    ".mypy_cache",
+    ".idea",
+    ".vscode",
+}
 MAX_OUTPUT = 8_000  # characters of tool output the model gets back; the rest is cut
 
 
@@ -38,9 +51,14 @@ def make_schema(fn: Callable) -> dict:
         props[p.name] = {"type": TYPES[p.annotation], "description": notes.get(p.name, "")}
         if p.default is inspect.Parameter.empty:
             required.append(p.name)
-    return {"type": "function", "function": {
-        "name": fn.__name__, "description": description,
-        "parameters": {"type": "object", "properties": props, "required": required}}}
+    return {
+        "type": "function",
+        "function": {
+            "name": fn.__name__,
+            "description": description,
+            "parameters": {"type": "object", "properties": props, "required": required},
+        },
+    }
 
 
 REGISTRY: dict[str, Tool] = {}
@@ -50,13 +68,14 @@ def tool(kind: str):
     def register(fn):
         REGISTRY[fn.__name__] = Tool(fn.__name__, fn, kind, make_schema(fn))
         return fn
+
     return register
 
 
 def cut(text: str, limit: int = MAX_OUTPUT) -> str:
     if len(text) <= limit:
         return text
-    return text[: limit // 2] + f"\n… [{len(text) - limit} characters cut] …\n" + text[-limit // 2:]
+    return text[: limit // 2] + f"\n… [{len(text) - limit} characters cut] …\n" + text[-limit // 2 :]
 
 
 def walk(ws: Workspace, start):
@@ -124,7 +143,7 @@ def search(ws: Workspace, pattern: str, path: str = ".", files: str = "*") -> st
             continue
         try:
             text = Path(f).read_text(encoding="utf-8")
-        except (UnicodeDecodeError, OSError):
+        except UnicodeDecodeError, OSError:
             continue
         for n, line in enumerate(text.splitlines(), 1):
             if rx.search(line):
@@ -156,12 +175,12 @@ def closest(old: str, wanted: str) -> str:
     file_lines, n = old.splitlines(), max(1, len(wanted.splitlines()))
     best, best_at = 0.0, 0
     for i in range(max(1, len(file_lines) - n + 1)):
-        score = difflib.SequenceMatcher(None, "\n".join(file_lines[i:i + n]), wanted).ratio()
+        score = difflib.SequenceMatcher(None, "\n".join(file_lines[i : i + n]), wanted).ratio()
         if score > best:
             best, best_at = score, i
     if best < 0.5:
         return ""
-    return "\nThe closest text in the file is:\n" + "\n".join(file_lines[best_at:best_at + n])
+    return "\nThe closest text in the file is:\n" + "\n".join(file_lines[best_at : best_at + n])
 
 
 def check_fresh(ws: Workspace, full) -> None:
@@ -188,8 +207,10 @@ def edit_file(ws: Workspace, path: str, old_text: str, new_text: str) -> str:
     old_text, new_text = unnumber(old_text), unnumber(new_text)
     count = old.count(old_text)
     if count == 0:
-        raise ToolError(f"old_text was not found in {path}. Copy it exactly, spaces included, without line numbers."
-                        + closest(old, old_text))
+        raise ToolError(
+            f"old_text was not found in {path}. Copy it exactly, spaces included, without line numbers."
+            + closest(old, old_text)
+        )
     if count > 1:
         raise ToolError(f"old_text appears {count} times in {path}. Add more surrounding lines to pick one.")
     new = old.replace(old_text, new_text)
@@ -237,8 +258,16 @@ def run_command(ws: Workspace, command: str, timeout: int = 120) -> str:
     if not ws.may_run(command):
         return "The user said no to this command. Ask them what to do instead."
     try:
-        p = subprocess.run(command, shell=True, cwd=ws.root, capture_output=True, text=True,
-                           encoding="utf-8", errors="replace", timeout=min(timeout, 600))
+        p = subprocess.run(
+            command,
+            shell=True,
+            cwd=ws.root,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=min(timeout, 600),
+        )
     except subprocess.TimeoutExpired:
         return f"Stopped after {timeout} s. If it waits for input or runs a server, it cannot run here."
     out = (p.stdout + ("\n" + p.stderr if p.stderr else "")).strip()

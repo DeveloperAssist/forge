@@ -43,8 +43,11 @@ def setup(say=print) -> bool:
         try:
             pull = httpx.post(f"{OLLAMA}/api/pull", json={"model": base, "stream": False}, timeout=None)
             pull.raise_for_status()
-            made = httpx.post(f"{OLLAMA}/api/create", timeout=120,
-                              json={"model": name, "from": base, "parameters": {"num_ctx": n_ctx}, "stream": False})
+            made = httpx.post(
+                f"{OLLAMA}/api/create",
+                timeout=120,
+                json={"model": name, "from": base, "parameters": {"num_ctx": n_ctx}, "stream": False},
+            )
             made.raise_for_status()
         except httpx.HTTPError as e:
             say(f"  could not reach Ollama ({e}). Is it installed and running? https://ollama.com")

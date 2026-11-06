@@ -20,7 +20,9 @@ class Trace:
 
 def both(*listeners):
     """Send every event to several listeners (the screen and the trace)."""
+
     def event(kind, **details):
         for listen in listeners:
             listen(kind, **details)
+
     return event

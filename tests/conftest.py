@@ -31,8 +31,9 @@ def project(tmp_path):
     (tmp_path / "app.py").write_text("def total(a, b):\n    return a - b\n", encoding="utf-8")
     (tmp_path / "conftest.py").write_text("", encoding="utf-8")  # lets pytest import app.py
     (tmp_path / "tests").mkdir()
-    (tmp_path / "tests" / "test_app.py").write_text("from app import total\n\ndef test_total():\n"
-                                                    "    assert total(2, 3) == 5\n", encoding="utf-8")
+    (tmp_path / "tests" / "test_app.py").write_text(
+        "from app import total\n\ndef test_total():\n    assert total(2, 3) == 5\n", encoding="utf-8"
+    )
     return tmp_path
 
 

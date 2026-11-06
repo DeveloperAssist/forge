@@ -14,8 +14,13 @@ class Checkpoints:
         self.stack: list[str] = []  # snapshot ids, newest last
 
     def git(self, *args: str) -> str:
-        p = subprocess.run(["git", f"--git-dir={self.git_dir}", f"--work-tree={self.root}", *args],
-                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+        p = subprocess.run(
+            ["git", f"--git-dir={self.git_dir}", f"--work-tree={self.root}", *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
         if p.returncode != 0:
             raise RuntimeError(p.stderr.strip() or p.stdout.strip())
         return p.stdout.strip()
@@ -30,8 +35,17 @@ class Checkpoints:
     def snapshot(self, label: str) -> str:
         self.setup()
         self.git("add", "-A")
-        self.git("-c", "user.name=forge", "-c", "user.email=forge@localhost",
-                 "commit", "-q", "--allow-empty", "-m", label[:200])
+        self.git(
+            "-c",
+            "user.name=forge",
+            "-c",
+            "user.email=forge@localhost",
+            "commit",
+            "-q",
+            "--allow-empty",
+            "-m",
+            label[:200],
+        )
         sha = self.git("rev-parse", "HEAD")
         self.stack.append(sha)
         return sha

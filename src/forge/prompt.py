@@ -34,10 +34,11 @@ PLAN_RULES = """You are in PLAN mode: read-only. Explore the code, then reply wi
 
 def git_status(root: Path) -> str:
     try:
-        p = subprocess.run(["git", "status", "--short", "--branch"], cwd=root, capture_output=True, text=True,
-                           timeout=10)
+        p = subprocess.run(
+            ["git", "status", "--short", "--branch"], cwd=root, capture_output=True, text=True, timeout=10
+        )
         return p.stdout.strip()[:1500] if p.returncode == 0 else "not a git repository"
-    except (OSError, subprocess.TimeoutExpired):
+    except OSError, subprocess.TimeoutExpired:
         return "git not available"
 
 
@@ -48,9 +49,11 @@ def system_prompt(root: Path, mode: str, skills: dict, helper: bool = False) -> 
         parts = [RULES.split("How you work:")[0].strip(), HELPER_RULES]
     elif mode == "plan":
         parts.append(PLAN_RULES)
-    parts.append(f"Environment:\n- you are already inside the project folder ({root.name}); every path is relative "
-                 f"to it, e.g. . or src/app.py\n- OS: {platform.system()}, commands run in "
-                 f"{shell}\n- today: {date.today().isoformat()}\n- git: {git_status(root)}")
+    parts.append(
+        f"Environment:\n- you are already inside the project folder ({root.name}); every path is relative "
+        f"to it, e.g. . or src/app.py\n- OS: {platform.system()}, commands run in "
+        f"{shell}\n- today: {date.today().isoformat()}\n- git: {git_status(root)}"
+    )
     memory = root / "FORGE.md"
     if memory.exists():
         parts.append("Project notes from FORGE.md (follow them):\n" + memory.read_text(encoding="utf-8")[:6000])

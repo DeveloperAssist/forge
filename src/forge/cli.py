@@ -36,8 +36,7 @@ def build(root: Path, args) -> Agent:
     ws = Workspace(root, s.mode, screen.approve, s.allow_commands)
     ws.skills = skills.load(ws.root)
     trace = Trace(ws.root)
-    agent = Agent(LLM(s), ws, s.max_steps, both(screen.event, trace.event), s.context_budget,
-                  Checkpoints(ws.root))
+    agent = Agent(LLM(s), ws, s.max_steps, both(screen.event, trace.event), s.context_budget, Checkpoints(ws.root))
     trace.event("start", provider=s.provider, model=s.model, mode=s.mode)
     agent.settings = s
     agent.screen_stop = screen.stop_spinner
@@ -56,8 +55,13 @@ def slash(agent: Agent, line: str) -> bool:
         files = agent.checkpoints.undo()
         console.print(f"[green]put back: {', '.join(files)}[/]" if files else "[yellow]nothing to undo[/]")
         if files:
-            agent.messages.append({"role": "user", "content": f"[note] The user undid your last changes to: "
-                                                               f"{', '.join(files)}. Read files again before editing."})
+            agent.messages.append(
+                {
+                    "role": "user",
+                    "content": f"[note] The user undid your last changes to: "
+                    f"{', '.join(files)}. Read files again before editing.",
+                }
+            )
             agent.ws.seen.clear()
     elif cmd == "init":
         agent.ask(INIT_TASK)
@@ -71,8 +75,10 @@ def slash(agent: Agent, line: str) -> bool:
         console.print("[green]conversation cleared[/]")
     elif cmd == "tokens":
         t = agent.tokens
-        console.print(f"context now {t['last_prompt']:,} tokens (compacts at {agent.context_budget:,}) · "
-                      f"used so far {t['prompt']:,} in, {t['output']:,} out")
+        console.print(
+            f"context now {t['last_prompt']:,} tokens (compacts at {agent.context_budget:,}) · "
+            f"used so far {t['prompt']:,} in, {t['output']:,} out"
+        )
     else:
         console.print(HELP)
     return True
@@ -80,12 +86,14 @@ def slash(agent: Agent, line: str) -> bool:
 
 def repl(agent: Agent) -> None:
     s = agent.settings
-    console.print(f"[bold]Forge[/] · {s.model} via {s.provider} · mode [bold]{agent.ws.mode}[/] · "
-                  f"{agent.ws.root.name}/   [dim](/help for commands)[/]")
+    console.print(
+        f"[bold]Forge[/] · {s.model} via {s.provider} · mode [bold]{agent.ws.mode}[/] · "
+        f"{agent.ws.root.name}/   [dim](/help for commands)[/]"
+    )
     while True:
         try:
             line = console.input("[bold green]›[/] ").strip()
-        except (EOFError, KeyboardInterrupt):
+        except EOFError, KeyboardInterrupt:
             break
         if not line:
             continue
@@ -112,6 +120,7 @@ def main() -> None:
     args = p.parse_args()
     if args.prompt == ["setup"]:  # forge setup: make the local models with a big enough window
         from .local_models import setup
+
         raise SystemExit(0 if setup() else 1)
     agent = build(Path(args.dir), args)
     if args.prompt:

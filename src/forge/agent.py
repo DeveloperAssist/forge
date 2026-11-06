@@ -22,12 +22,22 @@ to do, and any exact names (files, functions, errors) you will need. Short bulle
 # Kept narrow on purpose: "fix it but don't change the tests" must still be allowed to edit.
 READ_ONLY_ASK = re.compile(
     r"\b(don'?t|do not|dont)\s+(change|edit|modify|touch)\s+(any\s+code|anything|the\s+code|code|any\s+files?)\b"
-    r"|\b(just|only)\s+explain\b|\b(don'?t|do not|dont)\s+fix\b", re.I)
+    r"|\b(just|only)\s+explain\b|\b(don'?t|do not|dont)\s+fix\b",
+    re.I,
+)
 
 
 class Agent:
-    def __init__(self, llm: LLM, ws: Workspace, max_steps: int = 40, on_event: Event | None = None,
-                 context_budget: int = 24_000, checkpoints: Checkpoints | None = None, helper: bool = False):
+    def __init__(
+        self,
+        llm: LLM,
+        ws: Workspace,
+        max_steps: int = 40,
+        on_event: Event | None = None,
+        context_budget: int = 24_000,
+        checkpoints: Checkpoints | None = None,
+        helper: bool = False,
+    ):
         self.llm = llm
         self.ws = ws
         self.max_steps = max_steps
@@ -40,8 +50,9 @@ class Agent:
         if not helper:
             ws.explore = self.explore
             llm.on_wait = lambda secs: self.on_event("wait", seconds=secs)
-            llm.on_switch = lambda provider, model, reason: self.on_event("switch", provider=provider, model=model,
-                                                                          reason=reason)
+            llm.on_switch = lambda provider, model, reason: self.on_event(
+                "switch", provider=provider, model=model, reason=reason
+            )
 
     # ------------------------------------------------------------------------------------------------ the loop
     def ask(self, user_text: str) -> str:
@@ -59,8 +70,10 @@ class Agent:
         if self.checkpoints:
             self.checkpoints.snapshot(user_text)  # /undo comes back to here
         # the system prompt is rebuilt every turn: the mode, git status, FORGE.md or skills may have changed
-        system = {"role": "system", "content": system_prompt(self.ws.root, self.ws.mode, self.ws.skills,
-                                                             helper=self.helper)}
+        system = {
+            "role": "system",
+            "content": system_prompt(self.ws.root, self.ws.mode, self.ws.skills, helper=self.helper),
+        }
         self.messages = [system] + [m for m in self.messages if m["role"] != "system"]
         self.messages.append({"role": "user", "content": user_text})
         self.on_event("user", text=user_text)
@@ -81,8 +94,10 @@ class Agent:
                 if ("tool" in said or "failed_generation" in said or "parsing failed" in said) and pushbacks < 3:
                     pushbacks += 1
                     names = ", ".join(s["function"]["name"] for s in tools.schemas(self.ws))
-                    problem = (f"Your last reply was rejected by the server ({str(e)[:160]}). Reply again, with one "
-                               f"valid tool call or a plain answer. You can only use: {names}.")
+                    problem = (
+                        f"Your last reply was rejected by the server ({str(e)[:160]}). Reply again, with one "
+                        f"valid tool call or a plain answer. You can only use: {names}."
+                    )
                     self.on_event("check", text=problem)
                     self.messages.append({"role": "user", "content": f"[automatic check] {problem}"})
                     continue
@@ -112,9 +127,11 @@ class Agent:
                     key = (call.name, repr(sorted(call.args.items())), result)
                     seen_calls[key] = seen_calls.get(key, 0) + 1
                     if seen_calls[key] >= 2:  # small models get stuck repeating one call: point it out
-                        result += (f"\n[automatic check] You have made this exact call {seen_calls[key]} times and got "
-                                   "the same result. Doing it again will not change anything: try a different "
-                                   "approach (other arguments, another tool, or read the files directly).")
+                        result += (
+                            f"\n[automatic check] You have made this exact call {seen_calls[key]} times and got "
+                            "the same result. Doing it again will not change anything: try a different "
+                            "approach (other arguments, another tool, or read the files directly)."
+                        )
                 self.on_event("tool_result", name=call.name, result=result)
                 if call.name == "update_plan":
                     self.on_event("plan", text=self.ws.plan)
@@ -131,17 +148,24 @@ class Agent:
             return "You replied with nothing. Carry on with the task using the tools, or say what is blocking you."
         sentences = re.split(r"(?<=[.!?])\s+", text.strip())
         last = sentences[-1].lower()
-        if last.endswith(":") or re.match(r"((first|now|next|then|so|ok|okay),?\s+)?(let's|let me|i will|i'll|i need to"
-                                          r"|i am going to|i'm going to)\b", last):
+        if last.endswith(":") or re.match(
+            r"((first|now|next|then|so|ok|okay),?\s+)?(let's|let me|i will|i'll|i need to"
+            r"|i am going to|i'm going to)\b",
+            last,
+        ):
             return "You said what you will do next but did not do it. Call the tool now, in this reply."
         if self.ws.changed and self.ws.last_exit is None and not self.helper and self.ws.mode != "plan":
-            return (f"You changed {', '.join(sorted(self.ws.changed))} but have not run anything since. Run the "
-                    "tests (or the program) with run_command and read the real result before you say it works.")
+            return (
+                f"You changed {', '.join(sorted(self.ws.changed))} but have not run anything since. Run the "
+                "tests (or the program) with run_command and read the real result before you say it works."
+            )
         if self.ws.last_exit not in (None, 0):
             changed = ", ".join(sorted(self.ws.changed)) or "no files"
-            return (f"The last command you ran failed (exit code {self.ws.last_exit}) and you have changed "
-                    f"{changed} so far. It is not fixed yet. Read the error, change the code, run it again. "
-                    "If you are stuck, say exactly what is still failing.")
+            return (
+                f"The last command you ran failed (exit code {self.ws.last_exit}) and you have changed "
+                f"{changed} so far. It is not fixed yet. Read the error, change the code, run it again. "
+                "If you are stuck, say exactly what is still failing."
+            )
         return ""
 
     # ------------------------------------------------------------------------------------------------ context
@@ -164,8 +188,9 @@ class Agent:
             self.on_event("compact", before=self.context_budget, kept=len(self.messages))
             return
         transcript = "\n".join(f"{m['role']}: {str(m.get('content') or m.get('tool_calls'))[:2000]}" for m in old)
-        reply = self.llm.chat([{"role": "system", "content": SUMMARY_PROMPT},
-                               {"role": "user", "content": transcript}], [])
+        reply = self.llm.chat(
+            [{"role": "system", "content": SUMMARY_PROMPT}, {"role": "user", "content": transcript}], []
+        )
         summary = {"role": "user", "content": "[summary of the earlier conversation]\n" + reply.text}
         before = self.tokens["last_prompt"]
         self.messages = [self.messages[0], summary] + self.messages[keep_from:]

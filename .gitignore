@@ -17,3 +17,4 @@ SPEC.md
 
 # API keys: never commit
 .env
+evals/results/exam-ollama-*/

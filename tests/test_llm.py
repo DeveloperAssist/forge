@@ -50,8 +50,10 @@ def test_chain_only_has_providers_with_keys(monkeypatch):
 
 
 def test_daily_limit_switches_to_the_next_provider(monkeypatch):
-    clients = {"groq": FakeClient(limit_error("tokens per day (TPD) ... Please try again in 9m27.2s.")),
-               "gemini": FakeClient(ok("hello from gemini"))}
+    clients = {
+        "groq": FakeClient(limit_error("tokens per day (TPD) ... Please try again in 9m27.2s.")),
+        "gemini": FakeClient(ok("hello from gemini")),
+    }
     llm = make(monkeypatch, clients)
     switched = []
     llm.on_switch = lambda provider, model, reason: switched.append(provider)
@@ -74,6 +76,7 @@ def test_keys_come_from_dot_env(tmp_path, monkeypatch):
     (tmp_path / ".env").write_text('GEMINI_API_KEY="g-123"\nGROQ_API_KEY=from-file\nOTHER=x\n', encoding="utf-8")
     config.load_keys(tmp_path)
     import os
+
     assert os.environ["GEMINI_API_KEY"] == "g-123" and os.environ["GROQ_API_KEY"] == "already-set"
     assert "OTHER" not in os.environ or os.environ["OTHER"] != "x"
 

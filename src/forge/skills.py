@@ -25,7 +25,7 @@ HEADER = re.compile(r"\A---\s*\n(.*?)\n---\s*\n", re.S)
 def parse(text: str, fallback_name: str) -> Skill:
     m = HEADER.match(text)
     meta = dict(re.findall(r"^(\w+):\s*(.+)$", m.group(1), re.M)) if m else {}
-    body = text[m.end():] if m else text
+    body = text[m.end() :] if m else text
     return Skill(meta.get("name", fallback_name).strip(), meta.get("description", "").strip(), body.strip())
 
 

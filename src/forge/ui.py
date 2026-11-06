@@ -7,8 +7,16 @@ from rich.syntax import Syntax
 
 console = Console(highlight=False)
 
-ARG_SHOWN = {"read_file": "path", "list_files": "path", "search": "pattern", "edit_file": "path",
-             "write_file": "path", "run_command": "command", "explore": "question", "use_skill": "name"}
+ARG_SHOWN = {
+    "read_file": "path",
+    "list_files": "path",
+    "search": "pattern",
+    "edit_file": "path",
+    "write_file": "path",
+    "run_command": "command",
+    "explore": "question",
+    "use_skill": "name",
+}
 
 
 class Screen:
@@ -35,8 +43,9 @@ class Screen:
                 mark = next((v for k, v in marks.items() if line.strip().startswith(k)), "•")
                 console.print(f"  {mark} {line.strip()[3:].strip() if mark != '•' else line.strip()}")
         elif kind == "wait":
-            console.print(f"[yellow]free-tier token limit reached: waiting {d['seconds'] / 60:.1f} min, "
-                          "then carrying on[/]")
+            console.print(
+                f"[yellow]free-tier token limit reached: waiting {d['seconds'] / 60:.1f} min, then carrying on[/]"
+            )
         elif kind == "switch":
             console.print(f"[yellow]{d['reason']}: switching to {d['model']} via {d['provider']}[/]")
         elif kind == "compact":
@@ -68,7 +77,6 @@ class Screen:
             body = Syntax(detail or "(no change)", "diff", theme="ansi_dark", word_wrap=True)
             console.print(Panel(body, title=f"[bold yellow]{title}[/]", border_style="yellow"))
         else:
-            console.print(Panel(f"[bold]{title}[/]", title="[bold yellow]Run this command?[/]",
-                                border_style="yellow"))
+            console.print(Panel(f"[bold]{title}[/]", title="[bold yellow]Run this command?[/]", border_style="yellow"))
         answer = console.input("[yellow]Allow? [y]es / [n]o:[/] ").strip().lower()
         return answer in ("y", "yes", "")

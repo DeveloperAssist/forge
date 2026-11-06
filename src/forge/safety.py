@@ -11,9 +11,19 @@ class ToolError(Exception):
 
 # Never run these, whatever the mode: wiping disks, piping the internet into a shell, pushing code, secrets.
 BLOCKED = [
-    r"\brm\s+-[a-z]*r[a-z]*f?\s+(/|~|\*|\.\s*$)", r"\bformat\s+[a-z]:", r"\bdel\s+/[sq]", r"\brmdir\s+/s",
-    r"(curl|wget|iwr|Invoke-WebRequest)[^|]*\|\s*(sh|bash|python|iex)", r"\bgit\s+push\b", r"\bgit\s+reset\s+--hard",
-    r"\bshutdown\b", r"\bmkfs", r"\bsudo\b", r"\.env\b", r"id_rsa", r"\bchmod\s+-R\s+777",
+    r"\brm\s+-[a-z]*r[a-z]*f?\s+(/|~|\*|\.\s*$)",
+    r"\bformat\s+[a-z]:",
+    r"\bdel\s+/[sq]",
+    r"\brmdir\s+/s",
+    r"(curl|wget|iwr|Invoke-WebRequest)[^|]*\|\s*(sh|bash|python|iex)",
+    r"\bgit\s+push\b",
+    r"\bgit\s+reset\s+--hard",
+    r"\bshutdown\b",
+    r"\bmkfs",
+    r"\bsudo\b",
+    r"\.env\b",
+    r"id_rsa",
+    r"\bchmod\s+-R\s+777",
 ]
 
 

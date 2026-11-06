@@ -9,10 +9,12 @@ from forge.skills import load, parse
 
 
 def test_the_loop_runs_tools_then_answers(ws):
-    llm = FakeLLM(call("read_file", path="app.py"),
-                  call("edit_file", 1, path="app.py", old_text="a - b", new_text="a + b"),
-                  call("run_command", 2, command="python -m pytest -q"),
-                  say("Fixed total: it subtracted. Tests pass."))
+    llm = FakeLLM(
+        call("read_file", path="app.py"),
+        call("edit_file", 1, path="app.py", old_text="a - b", new_text="a + b"),
+        call("run_command", 2, command="python -m pytest -q"),
+        say("Fixed total: it subtracted. Tests pass."),
+    )
     answer = Agent(llm, ws).ask("fix the test")
     assert answer == "Fixed total: it subtracted. Tests pass."
     assert ws.last_exit == 0
@@ -21,9 +23,11 @@ def test_the_loop_runs_tools_then_answers(ws):
 
 
 def test_a_false_done_is_sent_back(ws):
-    llm = FakeLLM(call("run_command", command="python -m pytest -q"),
-                  say("I fixed it, all tests pass."),            # it did not
-                  say("Sorry: it still fails because total subtracts."))
+    llm = FakeLLM(
+        call("run_command", command="python -m pytest -q"),
+        say("I fixed it, all tests pass."),  # it did not
+        say("Sorry: it still fails because total subtracts."),
+    )
     events = []
     Agent(llm, ws, on_event=lambda k, **d: events.append(k)).ask("fix the test")
     assert "check" in events
@@ -32,8 +36,9 @@ def test_a_false_done_is_sent_back(ws):
 
 
 def test_saying_what_it_will_do_is_not_doing_it(ws):
-    llm = FakeLLM(say("The bug is in total. Let's check the implementation in app.py."),
-                  say("total subtracts instead of adding."))
+    llm = FakeLLM(
+        say("The bug is in total. Let's check the implementation in app.py."), say("total subtracts instead of adding.")
+    )
     Agent(llm, ws).ask("why does the test fail?")
     assert "did not do it" in llm.sent[1][-1]["content"]
 
@@ -52,10 +57,12 @@ def test_bad_json_arguments_go_back_to_the_model(ws):
 
 
 def test_helper_agent_works_in_its_own_context(ws):
-    llm = FakeLLM(call("explore", question="where is total?"),
-                  call("search", 1, pattern="def total"),        # the helper's turn
-                  say("total is in app.py line 1."),             # the helper's answer
-                  say("total lives in app.py."))
+    llm = FakeLLM(
+        call("explore", question="where is total?"),
+        call("search", 1, pattern="def total"),  # the helper's turn
+        say("total is in app.py line 1."),  # the helper's answer
+        say("total lives in app.py."),
+    )
     agent = Agent(llm, ws)
     agent.ask("where is total?")
     helper_view = llm.sent[1]
@@ -79,11 +86,13 @@ def test_compaction_summarises_old_turns(ws):
 
 def test_undo_puts_files_back(ws):
     cp = Checkpoints(ws.root)
-    llm = FakeLLM(call("read_file", path="app.py"),
-                  call("edit_file", 1, path="app.py", old_text="a - b", new_text="a + b"),
-                  call("write_file", 2, path="notes.txt", content="hi"),
-                  call("run_command", 3, command="python -m pytest -q"),
-                  say("Done."))
+    llm = FakeLLM(
+        call("read_file", path="app.py"),
+        call("edit_file", 1, path="app.py", old_text="a - b", new_text="a + b"),
+        call("write_file", 2, path="notes.txt", content="hi"),
+        call("run_command", 3, command="python -m pytest -q"),
+        say("Done."),
+    )
     Agent(llm, ws, checkpoints=cp).ask("fix it")
     assert (ws.root / "notes.txt").exists()
     assert sorted(cp.undo()) == ["app.py", "notes.txt"]
@@ -94,8 +103,9 @@ def test_undo_puts_files_back(ws):
 def test_skills_are_found_and_loaded(ws):
     folder = ws.root / ".forge" / "skills" / "write-tests"
     folder.mkdir(parents=True)
-    (folder / "SKILL.md").write_text("---\nname: write-tests\ndescription: add pytest tests\n---\n1. Read the code.",
-                                     encoding="utf-8")
+    (folder / "SKILL.md").write_text(
+        "---\nname: write-tests\ndescription: add pytest tests\n---\n1. Read the code.", encoding="utf-8"
+    )
     ws.skills = load(ws.root)
     llm = FakeLLM(call("use_skill", name="write-tests"), say("Loaded."))
     Agent(llm, ws).ask("add tests")
@@ -117,8 +127,9 @@ def test_a_rejected_tool_call_goes_back_to_the_model(ws):
             if not self.sent:
                 self.sent.append(messages)
                 response = httpx.Response(400, request=httpx.Request("POST", "http://model"))
-                raise openai.BadRequestError("attempted to call tool 'edit_file' which was not in request.tools",
-                                             response=response, body=None)
+                raise openai.BadRequestError(
+                    "attempted to call tool 'edit_file' which was not in request.tools", response=response, body=None
+                )
             return super().chat(messages, tools)
 
     ws.mode = "plan"
@@ -129,11 +140,13 @@ def test_a_rejected_tool_call_goes_back_to_the_model(ws):
 
 
 def test_changed_files_must_be_checked_before_done(ws):
-    llm = FakeLLM(call("read_file", path="app.py"),
-                  call("edit_file", 1, path="app.py", old_text="a - b", new_text="a + b"),
-                  say("Fixed. All tests pass."),                   # it never ran them
-                  call("run_command", 2, command="python -m pytest -q"),
-                  say("Fixed and checked: tests pass."))
+    llm = FakeLLM(
+        call("read_file", path="app.py"),
+        call("edit_file", 1, path="app.py", old_text="a - b", new_text="a + b"),
+        say("Fixed. All tests pass."),  # it never ran them
+        call("run_command", 2, command="python -m pytest -q"),
+        say("Fixed and checked: tests pass."),
+    )
     assert Agent(llm, ws).ask("fix it") == "Fixed and checked: tests pass."
     assert "have not run anything since" in llm.sent[3][-1]["content"]
 
@@ -145,8 +158,9 @@ def test_unparsable_reply_gets_a_retry(ws):
         def chat(self, messages, tools):
             if len(self.sent) == 0:
                 self.sent.append(list(messages))
-                raise openai.BadRequestError("Parsing failed. See 'failed_generation' for more details.",
-                                             response=response, body=None)
+                raise openai.BadRequestError(
+                    "Parsing failed. See 'failed_generation' for more details.", response=response, body=None
+                )
             return super().chat(messages, tools)
 
     llm = Garbles(say("Nothing to change."))
@@ -163,14 +177,15 @@ def test_wait_seconds_reads_groq_messages():
 
 
 def test_first_let_me_counts_as_a_promise(ws):
-    llm = FakeLLM(say("I'll help. First, let me look at the test in `tests/test_app.py`."),
-                  say("The test expects 3 but total subtracts."))
+    llm = FakeLLM(
+        say("I'll help. First, let me look at the test in `tests/test_app.py`."),
+        say("The test expects 3 but total subtracts."),
+    )
     assert Agent(llm, ws).ask("why does it fail?") == "The test expects 3 but total subtracts."
 
 
 def test_repeating_the_same_call_is_pointed_out(ws):
-    llm = FakeLLM(call("search", pattern="nothing_here"), call("search", 1, pattern="nothing_here"),
-                  say("Not found."))
+    llm = FakeLLM(call("search", pattern="nothing_here"), call("search", 1, pattern="nothing_here"), say("Not found."))
     Agent(llm, ws).ask("find it")
     results = [m["content"] for m in llm.sent[2] if m["role"] == "tool"]
     assert "exact call" not in results[0] and "exact call 2 times" in results[1]
@@ -188,8 +203,12 @@ def test_explain_only_requests_run_read_only(ws):
 def test_read_only_phrases_are_narrow():
     from forge.agent import READ_ONLY_ASK
 
-    for text in ["Don't change any code yet, just explain.", "just explain why", "do not edit anything",
-                 "dont fix it, tell me why"]:
+    for text in [
+        "Don't change any code yet, just explain.",
+        "just explain why",
+        "do not edit anything",
+        "dont fix it, tell me why",
+    ]:
         assert READ_ONLY_ASK.search(text), text
     for text in ["fix the bug but don't change the tests", "rename it and don't touch the README"]:
         assert not READ_ONLY_ASK.search(text), text
