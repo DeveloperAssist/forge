@@ -32,6 +32,7 @@ class Agent:
         self.tokens = {"prompt": 0, "output": 0, "last_prompt": 0}
         if not helper:
             ws.explore = self.explore
+            llm.on_wait = lambda secs: self.on_event("wait", seconds=secs)
 
     # ------------------------------------------------------------------------------------------------ the loop
     def ask(self, user_text: str) -> str:
@@ -54,10 +55,13 @@ class Agent:
             try:
                 reply = self.llm.chat(self.messages, tools.schemas(self.ws))
             except openai.BadRequestError as e:
-                if "tool" in str(e).lower() and pushbacks < 3:  # e.g. it called a tool this mode does not offer
+                said = str(e).lower()
+                # the server could not read the model's reply: a tool this mode does not offer, or broken output
+                if ("tool" in said or "failed_generation" in said or "parsing failed" in said) and pushbacks < 3:
                     pushbacks += 1
                     names = ", ".join(s["function"]["name"] for s in tools.schemas(self.ws))
-                    problem = f"Your tool call was rejected: {str(e)[-200:]}. You can only use: {names}."
+                    problem = (f"Your last reply was rejected by the server ({str(e)[:160]}). Reply again, with one "
+                               f"valid tool call or a plain answer. You can only use: {names}.")
                     self.on_event("check", text=problem)
                     self.messages.append({"role": "user", "content": f"[automatic check] {problem}"})
                     continue

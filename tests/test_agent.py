@@ -1,7 +1,10 @@
+import httpx
+import openai
 from conftest import FakeLLM, call, say
 
 from forge.agent import Agent
 from forge.checkpoints import Checkpoints
+from forge.llm import wait_seconds
 from forge.skills import load, parse
 
 
@@ -133,3 +136,26 @@ def test_changed_files_must_be_checked_before_done(ws):
                   say("Fixed and checked: tests pass."))
     assert Agent(llm, ws).ask("fix it") == "Fixed and checked: tests pass."
     assert "have not run anything since" in llm.sent[3][-1]["content"]
+
+
+def test_unparsable_reply_gets_a_retry(ws):
+    response = httpx.Response(400, request=httpx.Request("POST", "http://x"))
+
+    class Garbles(FakeLLM):
+        def chat(self, messages, tools):
+            if len(self.sent) == 0:
+                self.sent.append(list(messages))
+                raise openai.BadRequestError("Parsing failed. See 'failed_generation' for more details.",
+                                             response=response, body=None)
+            return super().chat(messages, tools)
+
+    llm = Garbles(say("Nothing to change."))
+    assert Agent(llm, ws).ask("look") == "Nothing to change."
+    assert "rejected by the server" in llm.sent[1][-1]["content"]
+
+
+def test_wait_seconds_reads_groq_messages():
+    assert wait_seconds("Please try again in 9m27.216s. Need more tokens?") == 9 * 60 + 27.216
+    assert wait_seconds("try again in 1m33.7s") == 93.7
+    assert wait_seconds("try again in 2.5s") == 2.5
+    assert wait_seconds("quota exceeded") is None

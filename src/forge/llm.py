@@ -2,8 +2,10 @@
 
 import json
 import re
+import time
 from dataclasses import dataclass, field
 
+import openai
 from openai import OpenAI
 
 from .config import Settings
@@ -37,6 +39,16 @@ class Reply:
 
 
 THINK = re.compile(r"<think>.*?</think>", re.S)
+MAX_WAIT = 20 * 60  # longer than this, give up and tell the user
+
+
+def wait_seconds(error: str) -> float | None:
+    """Groq says e.g. "Please try again in 9m27.216s". Turn that into seconds (None if it does not say)."""
+    m = re.search(r"try again in (?:(\d+)h)?(?:(\d+)m)?([\d.]+)?s?", error)
+    if not m or not any(m.groups()):
+        return None
+    h, mins, s = m.groups()
+    return int(h or 0) * 3600 + int(mins or 0) * 60 + float(s or 0)
 
 
 class LLM:
@@ -44,13 +56,27 @@ class LLM:
         self.settings = settings
         self.client = OpenAI(base_url=settings.base_url, api_key=settings.api_key, max_retries=4, timeout=300)
 
+    on_wait = None  # on_wait(seconds): the screen shows "free-tier limit, waiting…"
+
     def chat(self, messages: list[dict], tools: list[dict]) -> Reply:
         extra = {}
         if self.settings.provider == "ollama":
             extra["reasoning_effort"] = "none"  # qwen3 would otherwise think out loud first: slow on 8 GB
-        r = self.client.chat.completions.create(
-            model=self.settings.model, messages=messages, tools=tools or None, temperature=0.2, **extra,
-        )
+        for _ in range(6):
+            try:
+                r = self.client.chat.completions.create(
+                    model=self.settings.model, messages=messages, tools=tools or None, temperature=0.2, **extra,
+                )
+                break
+            except openai.RateLimitError as e:  # free tiers have a token limit: wait as long as the server says
+                secs = wait_seconds(str(e))
+                if secs is None or secs > MAX_WAIT:
+                    raise
+                if self.on_wait:
+                    self.on_wait(secs)
+                time.sleep(secs + 2)
+        else:
+            raise RuntimeError("Still rate-limited after 6 waits. Try again later.")
         m = r.choices[0].message
         calls = []
         for c in m.tool_calls or []:

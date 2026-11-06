@@ -25,8 +25,13 @@ HIDDEN = {"hidden_tests", "solution", "grading.md", "task.md", "__pycache__", ".
 
 def hidden_pass(folder: Path, task: Path) -> tuple[bool, str]:
     shutil.copytree(task / "hidden_tests", folder / "hidden_tests", dirs_exist_ok=True)
-    p = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "hidden_tests"],
-                       cwd=folder, capture_output=True, text=True, timeout=300)
+    p = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "hidden_tests"],
+        cwd=folder,
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
     return p.returncode == 0, (p.stdout.strip().splitlines() or [""])[-1]
 
 
@@ -49,12 +54,32 @@ def run_task(task: Path, settings: config.Settings, out: Path) -> dict:
         answer, error = "", f"{type(e).__name__}: {e}"
     secs = time.perf_counter() - start
     passed, summary = hidden_pass(work, task)
+    # the model's server stopped us (limit, outage): that says nothing about the agent, so it is not scored
+    scored = not error.startswith(
+        (
+            "RateLimitError",
+            "RuntimeError: Still rate-limited",
+            "APIConnectionError",
+            "APITimeoutError",
+            "InternalServerError",
+        )
+    )
     shutil.rmtree(work, ignore_errors=True)
-    return {"task": task.name, "pass": passed, "hidden": summary, "seconds": round(secs, 1),
-            "steps": events.count("thinking"), "tool_calls": events.count("tool_call"),
-            "pushbacks": events.count("check"), "tokens_in": agent.tokens["prompt"],
-            "tokens_out": agent.tokens["output"], "error": error, "answer": answer[:300],
-            "trace": trace.path.name}
+    return {
+        "task": task.name,
+        "pass": passed and scored,
+        "scored": scored,
+        "hidden": summary,
+        "seconds": round(secs, 1),
+        "steps": events.count("thinking"),
+        "tool_calls": events.count("tool_call"),
+        "pushbacks": events.count("check"),
+        "tokens_in": agent.tokens["prompt"],
+        "tokens_out": agent.tokens["output"],
+        "error": error,
+        "answer": answer[:2000],
+        "trace": trace.path.name,
+    }
 
 
 def main() -> None:
@@ -77,11 +102,24 @@ def main() -> None:
     for t in tasks:
         r = run_task(t, s, out)
         rows.append(r)
-        print(f"{'PASS' if r['pass'] else 'fail'}  {r['task']:<32} {r['seconds']:>6} s  {r['steps']:>2} steps  "
-              f"{r['pushbacks']} pushbacks  {r['error'][:60]}", flush=True)
+        mark = "PASS" if r["pass"] else "fail" if r["scored"] else "----"
+        print(
+            f"{mark}  {r['task']:<32} {r['seconds']:>6} s  {r['steps']:>2} steps  "
+            f"{r['pushbacks']} pushbacks  {r['error'][:60]}",
+            flush=True,
+        )
     passed = sum(r["pass"] for r in rows)
-    summary = {"set": args.set, "provider": s.provider, "model": s.model, "passed": passed, "total": len(rows),
-               "seconds": round(sum(r["seconds"] for r in rows), 1), "date": time.strftime("%Y-%m-%d %H:%M"),
-               "rows": rows}
+    unscored = sum(not r["scored"] for r in rows)
+    summary = {
+        "set": args.set,
+        "provider": s.provider,
+        "model": s.model,
+        "passed": passed,
+        "total": len(rows),
+        "not_scored": unscored,
+        "seconds": round(sum(r["seconds"] for r in rows), 1),
+        "date": time.strftime("%Y-%m-%d %H:%M"),
+        "rows": rows,
+    }
     (out / f"{time.strftime('%Y%m%d-%H%M%S')}.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
     print(f"\n{s.model} via {s.provider}: {passed}/{len(rows)} passed ({summary['seconds']} s)")

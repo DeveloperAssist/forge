@@ -34,6 +34,9 @@ class Screen:
             for line in d["text"].splitlines():
                 mark = next((v for k, v in marks.items() if line.strip().startswith(k)), "•")
                 console.print(f"  {mark} {line.strip()[3:].strip() if mark != '•' else line.strip()}")
+        elif kind == "wait":
+            console.print(f"[yellow]free-tier token limit reached: waiting {d['seconds'] / 60:.1f} min, "
+                          "then carrying on[/]")
         elif kind == "compact":
             console.print(f"[dim]context was {d['before']:,} tokens: older parts summarised to make room[/]")
         elif kind in ("helper_tool_call", "helper_tool_result"):
