@@ -135,7 +135,7 @@ Results are saved in `evals/results/`. A task stopped by a rate limit is shown a
 ## Tests
 
 ```bash
-uv run pytest        # 59 offline tests, with a fake model: no key, no internet
+uv run pytest        # 60 offline tests, with a fake model: no key, no internet
 uv run ruff check
 ```
 
