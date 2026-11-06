@@ -33,7 +33,8 @@ class Settings:
     mode: str = "ask"
     max_steps: int = 40
     context_budget: int = 24_000  # tokens we let the conversation grow to before compacting
-    fallbacks: list[str] = field(default_factory=lambda: ["groq", "cerebras", "gemini", "openrouter"])
+    # cerebras is not in the list: since July 2026 it is a card-only $5 trial, not a free tier
+    fallbacks: list[str] = field(default_factory=lambda: ["groq", "gemini", "openrouter"])
     allow_commands: list[str] = field(default_factory=lambda: [
         "pytest", "python -m pytest", "uv run pytest", "ruff", "uv run ruff",
         "git status", "git diff", "git log", "ls", "dir",
@@ -63,7 +64,21 @@ def api_key(provider: str) -> str:
     return key
 
 
+def load_keys(*folders: Path) -> None:
+    """Read API keys from a .env file (KEY=value lines). Only our key names, and never over a key already set."""
+    names = {p["key_env"] for p in PROVIDERS.values() if p["key_env"]}
+    for folder in folders:
+        env = folder / ".env"
+        if not env.is_file():
+            continue
+        for line in env.read_text(encoding="utf-8").splitlines():
+            name, _, value = line.strip().partition("=")
+            if name in names and value and not os.environ.get(name):
+                os.environ[name] = value.strip().strip('"').strip("'")
+
+
 def load(root: Path, **overrides) -> Settings:
+    load_keys(root, Path.cwd(), Path.home() / ".forge")  # the project, where you ran forge, then your own
     s = Settings()
     toml = root / "forge.toml"
     if toml.exists():

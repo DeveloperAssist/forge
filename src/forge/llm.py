@@ -17,6 +17,7 @@ class ToolCall:
     name: str
     args: dict
     bad_args: str = ""  # set when the model sent arguments that are not valid JSON
+    extra: dict | None = None  # provider-specific data we must send back, e.g. Gemini's thought_signature
 
 
 @dataclass
@@ -33,6 +34,7 @@ class Reply:
             msg["tool_calls"] = [
                 {"id": c.id, "type": "function",
                  "function": {"name": c.name, "arguments": c.bad_args or json.dumps(c.args)}}
+                | ({"extra_content": c.extra} if c.extra else {})
                 for c in self.tool_calls
             ]
         return msg
@@ -44,12 +46,15 @@ SHORT_WAIT = 90     # shorter than this, wait on the same provider instead of sw
 
 
 def limited(e: Exception) -> bool:
-    """Is this the server saying "too much for your free tier" (rate limit, or a request too big for it)?"""
-    return getattr(e, "status_code", None) in (413, 429) or isinstance(e, openai.RateLimitError)
+    """Should we wait or move on? Rate limit (429), a request too big for the free tier (413), overloaded (503)."""
+    return getattr(e, "status_code", None) in (413, 429, 503) or isinstance(e, openai.RateLimitError)
 
 
 def wait_seconds(error: str) -> float | None:
-    """Groq says e.g. "Please try again in 9m27.216s". Turn that into seconds (None if it does not say)."""
+    """Groq says "Please try again in 9m27.216s", Gemini says "retryDelay": "33s". Seconds, or None."""
+    gemini = re.search(r'"retryDelay":\s*"([\d.]+)s"', error)
+    if gemini:
+        return float(gemini.group(1))
     m = re.search(r"try again in (?:(\d+)h)?(?:(\d+)m)?([\d.]+)?s?", error)
     if not m or not any(m.groups()):
         return None
@@ -132,7 +137,8 @@ class LLM:
                 args, bad = json.loads(c.function.arguments or "{}"), ""
             except json.JSONDecodeError:
                 args, bad = {}, c.function.arguments
-            calls.append(ToolCall(c.id, c.function.name, args, bad))
+            extra = (c.model_extra or {}).get("extra_content")  # Gemini refuses the next turn without it
+            calls.append(ToolCall(c.id, c.function.name, args, bad, extra))
         text = THINK.sub("", m.content or "").strip()
         usage = r.usage
         return Reply(text, calls, usage.prompt_tokens if usage else 0, usage.completion_tokens if usage else 0)

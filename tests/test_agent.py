@@ -159,6 +159,7 @@ def test_wait_seconds_reads_groq_messages():
     assert wait_seconds("try again in 1m33.7s") == 93.7
     assert wait_seconds("try again in 2.5s") == 2.5
     assert wait_seconds("quota exceeded") is None
+    assert wait_seconds('[{"error": {"details": [{"retryDelay": "33s"}]}}]') == 33
 
 
 def test_first_let_me_counts_as_a_promise(ws):

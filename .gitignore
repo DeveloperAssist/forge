@@ -14,3 +14,6 @@ wheels/
 # internal notes for the owner (status, business decisions): kept local, not published
 SPEC.md
 .run_*.txt
+
+# API keys: never commit
+.env
