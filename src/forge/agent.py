@@ -47,6 +47,7 @@ class Agent:
         self.ws.changed.clear()
         self.ws.last_exit = None
         pushbacks = 0
+        seen_calls: dict[tuple, int] = {}
 
         for step in range(1, self.max_steps + 1):
             if self.tokens["last_prompt"] > self.context_budget:
@@ -88,6 +89,12 @@ class Agent:
                     result = f"Error: your arguments were not valid JSON: {call.bad_args[:300]}"
                 else:
                     result = tools.run_tool(self.ws, call.name, call.args)
+                    key = (call.name, repr(sorted(call.args.items())), result)
+                    seen_calls[key] = seen_calls.get(key, 0) + 1
+                    if seen_calls[key] >= 2:  # small models get stuck repeating one call: point it out
+                        result += (f"\n[automatic check] You have made this exact call {seen_calls[key]} times and got "
+                                   "the same result. Doing it again will not change anything: try a different "
+                                   "approach (other arguments, another tool, or read the files directly).")
                 self.on_event("tool_result", name=call.name, result=result)
                 if call.name == "update_plan":
                     self.on_event("plan", text=self.ws.plan)
@@ -104,7 +111,8 @@ class Agent:
             return "You replied with nothing. Carry on with the task using the tools, or say what is blocking you."
         sentences = re.split(r"(?<=[.!?])\s+", text.strip())
         last = sentences[-1].lower()
-        if last.endswith(":") or re.match(r"(let's|let me|i will|i'll|next,? i|now,? i|i need to)\b", last):
+        if last.endswith(":") or re.match(r"((first|now|next|then|so|ok|okay),?\s+)?(let's|let me|i will|i'll|i need to"
+                                          r"|i am going to|i'm going to)\b", last):
             return "You said what you will do next but did not do it. Call the tool now, in this reply."
         if self.ws.changed and self.ws.last_exit is None and not self.helper and self.ws.mode != "plan":
             return (f"You changed {', '.join(sorted(self.ws.changed))} but have not run anything since. Run the "

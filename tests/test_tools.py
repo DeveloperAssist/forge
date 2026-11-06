@@ -113,3 +113,8 @@ def test_plan_mode_only_offers_read_tools(ws):
 def test_long_output_is_cut_in_the_middle():
     out = tools.cut("a" * 5000 + "b" * 5000, limit=1000)
     assert out.startswith("a" * 500) and out.endswith("b" * 500) and "characters cut" in out
+
+
+def test_search_accepts_recursive_globs(ws):
+    assert "app.py" in tools.run_tool(ws, "search", {"pattern": "def total", "files": "**/*"})
+    assert "app.py" in tools.run_tool(ws, "search", {"pattern": "def total", "files": "**/*.py"})

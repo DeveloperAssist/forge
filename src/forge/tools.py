@@ -118,8 +118,9 @@ def search(ws: Workspace, pattern: str, path: str = ".", files: str = "*") -> st
         raise ToolError(f"There is no file or folder {path}. You are already inside the project: use . for the top.")
     targets = [str(start)] if start.is_file() else walk(ws, start)
     hits = []
+    name_glob = files.replace("\\", "/").rsplit("/", 1)[-1] or "*"  # models write **/*.py: match on the name part
     for f in targets:
-        if not fnmatch.fnmatch(os.path.basename(f), files):
+        if not fnmatch.fnmatch(os.path.basename(f), name_glob):
             continue
         try:
             text = Path(f).read_text(encoding="utf-8")

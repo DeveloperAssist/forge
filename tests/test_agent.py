@@ -159,3 +159,17 @@ def test_wait_seconds_reads_groq_messages():
     assert wait_seconds("try again in 1m33.7s") == 93.7
     assert wait_seconds("try again in 2.5s") == 2.5
     assert wait_seconds("quota exceeded") is None
+
+
+def test_first_let_me_counts_as_a_promise(ws):
+    llm = FakeLLM(say("I'll help. First, let me look at the test in `tests/test_app.py`."),
+                  say("The test expects 3 but total subtracts."))
+    assert Agent(llm, ws).ask("why does it fail?") == "The test expects 3 but total subtracts."
+
+
+def test_repeating_the_same_call_is_pointed_out(ws):
+    llm = FakeLLM(call("search", pattern="nothing_here"), call("search", 1, pattern="nothing_here"),
+                  say("Not found."))
+    Agent(llm, ws).ask("find it")
+    results = [m["content"] for m in llm.sent[2] if m["role"] == "tool"]
+    assert "exact call" not in results[0] and "exact call 2 times" in results[1]
