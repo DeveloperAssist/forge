@@ -1,0 +1,228 @@
+{
+ "set": "heldout",
+ "provider": "cerebras",
+ "model": "gpt-oss-120b",
+ "passed": 0,
+ "total": 12,
+ "not_scored": 12,
+ "seconds": 7.5,
+ "date": "2026-11-06 17:17",
+ "rows": [
+  {
+   "task": "01_metro_fare_slabs",
+   "pass": false,
+   "scored": false,
+   "hidden": "7 failed, 8 passed in 0.05s",
+   "seconds": 1.2,
+   "steps": 2,
+   "tool_calls": 1,
+   "pushbacks": 0,
+   "tokens_in": 1094,
+   "tokens_out": 36,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "RateLimitError: Error code: 429 - Requests per hour limit exceeded - too many requests sent.",
+   "answer": "",
+   "trace": "20261106-171716.jsonl"
+  },
+  {
+   "task": "02_fest_group_discount",
+   "pass": false,
+   "scored": false,
+   "hidden": "7 failed, 7 passed in 0.05s",
+   "seconds": 0.4,
+   "steps": 1,
+   "tool_calls": 0,
+   "pushbacks": 0,
+   "tokens_in": 0,
+   "tokens_out": 0,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "RateLimitError: Error code: 429 - Requests per hour limit exceeded - too many requests sent.",
+   "answer": "",
+   "trace": "20261106-171717.jsonl"
+  },
+  {
+   "task": "03_pincode_check",
+   "pass": false,
+   "scored": false,
+   "hidden": "6 failed, 12 passed in 0.05s",
+   "seconds": 0.5,
+   "steps": 1,
+   "tool_calls": 0,
+   "pushbacks": 0,
+   "tokens_in": 0,
+   "tokens_out": 0,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "RateLimitError: Error code: 429 - Requests per hour limit exceeded - too many requests sent.",
+   "answer": "",
+   "trace": "20261106-171718.jsonl"
+  },
+  {
+   "task": "04_cgpa_credit_weight",
+   "pass": false,
+   "scored": false,
+   "hidden": "6 failed, 3 passed in 0.05s",
+   "seconds": 1.0,
+   "steps": 1,
+   "tool_calls": 0,
+   "pushbacks": 0,
+   "tokens_in": 0,
+   "tokens_out": 0,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "RateLimitError: Error code: 429 - Requests per hour limit exceeded - too many requests sent.",
+   "answer": "",
+   "trace": "20261106-171719.jsonl"
+  },
+  {
+   "task": "05_cricket_overs_extras",
+   "pass": false,
+   "scored": false,
+   "hidden": "7 failed, 2 passed in 0.05s",
+   "seconds": 0.5,
+   "steps": 1,
+   "tool_calls": 0,
+   "pushbacks": 0,
+   "tokens_in": 0,
+   "tokens_out": 0,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "RateLimitError: Error code: 429 - Requests per hour limit exceeded - too many requests sent.",
+   "answer": "",
+   "trace": "20261106-171721.jsonl"
+  },
+  {
+   "task": "06_train_berth_type",
+   "pass": false,
+   "scored": false,
+   "hidden": "7 failed, 9 passed in 0.06s",
+   "seconds": 0.5,
+   "steps": 1,
+   "tool_calls": 0,
+   "pushbacks": 0,
+   "tokens_in": 0,
+   "tokens_out": 0,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "RateLimitError: Error code: 429 - Requests per hour limit exceeded - too many requests sent.",
+   "answer": "",
+   "trace": "20261106-171722.jsonl"
+  },
+  {
+   "task": "07_fest_registration_keyerror",
+   "pass": false,
+   "scored": false,
+   "hidden": "3 failed in 0.09s",
+   "seconds": 0.4,
+   "steps": 1,
+   "tool_calls": 0,
+   "pushbacks": 0,
+   "tokens_in": 0,
+   "tokens_out": 0,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "RateLimitError: Error code: 429 - Requests per hour limit exceeded - too many requests sent.",
+   "answer": "",
+   "trace": "20261106-171722.jsonl"
+  },
+  {
+   "task": "08_canteen_token_crash",
+   "pass": false,
+   "scored": false,
+   "hidden": "3 failed in 0.05s",
+   "seconds": 0.5,
+   "steps": 1,
+   "tool_calls": 0,
+   "pushbacks": 0,
+   "tokens_in": 0,
+   "tokens_out": 0,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "RateLimitError: Error code: 429 - Requests per hour limit exceeded - too many requests sent.",
+   "answer": "",
+   "trace": "20261106-171723.jsonl"
+  },
+  {
+   "task": "09_placement_eligibility",
+   "pass": false,
+   "scored": false,
+   "hidden": "5 failed in 0.06s",
+   "seconds": 0.4,
+   "steps": 1,
+   "tool_calls": 0,
+   "pushbacks": 0,
+   "tokens_in": 0,
+   "tokens_out": 0,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "RateLimitError: Error code: 429 - Requests per hour limit exceeded - too many requests sent.",
+   "answer": "",
+   "trace": "20261106-171724.jsonl"
+  },
+  {
+   "task": "10_upi_split_equal",
+   "pass": false,
+   "scored": false,
+   "hidden": "12 failed in 0.06s",
+   "seconds": 0.5,
+   "steps": 1,
+   "tool_calls": 0,
+   "pushbacks": 0,
+   "tokens_in": 0,
+   "tokens_out": 0,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "RateLimitError: Error code: 429 - Requests per hour limit exceeded - too many requests sent.",
+   "answer": "",
+   "trace": "20261106-171725.jsonl"
+  },
+  {
+   "task": "11_rename_hostel_fee",
+   "pass": false,
+   "scored": false,
+   "hidden": "3 failed, 1 passed in 0.05s",
+   "seconds": 1.0,
+   "steps": 1,
+   "tool_calls": 0,
+   "pushbacks": 0,
+   "tokens_in": 0,
+   "tokens_out": 0,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "RateLimitError: Error code: 429 - Requests per hour limit exceeded - too many requests sent.",
+   "answer": "",
+   "trace": "20261106-171726.jsonl"
+  },
+  {
+   "task": "12_explain_batting_average",
+   "pass": false,
+   "scored": false,
+   "hidden": "4 passed in 0.02s",
+   "seconds": 0.6,
+   "steps": 1,
+   "tool_calls": 0,
+   "pushbacks": 1,
+   "tokens_in": 0,
+   "tokens_out": 0,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "RateLimitError: Error code: 429 - Requests per hour limit exceeded - too many requests sent.",
+   "answer": "",
+   "trace": "20261106-171727.jsonl"
+  }
+ ]
+}

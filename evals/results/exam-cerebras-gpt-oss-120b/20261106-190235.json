@@ -1,0 +1,372 @@
+{
+ "set": "exam",
+ "provider": "cerebras",
+ "model": "gpt-oss-120b",
+ "passed": 18,
+ "total": 20,
+ "not_scored": 0,
+ "seconds": 6256.8,
+ "date": "2026-11-06 19:02",
+ "rows": [
+  {
+   "task": "01_gst_paise_rounding",
+   "pass": true,
+   "scored": true,
+   "hidden": "11 passed in 0.01s",
+   "seconds": 3662.6,
+   "steps": 7,
+   "tool_calls": 6,
+   "pushbacks": 0,
+   "tokens_in": 10072,
+   "tokens_out": 661,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented correct GST rounding by adding half\u2011paisa offset before integer division. Updated `gst_amount` in **gst.py** and verified all tests now pass.",
+   "trace": "20261106-171811.jsonl"
+  },
+  {
+   "task": "02_bunk_calculator",
+   "pass": true,
+   "scored": true,
+   "hidden": "8 passed in 0.01s",
+   "seconds": 62.4,
+   "steps": 7,
+   "tool_calls": 6,
+   "pushbacks": 0,
+   "tokens_in": 10283,
+   "tokens_out": 1126,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented correct calculation for `classes_can_bunk` by adjusting the loop\u2019s final count, ensuring it returns the maximum allowable skips without dropping below the target percentage. All tests now pass (`3 passed`).",
+   "trace": "20261106-181914.jsonl"
+  },
+  {
+   "task": "03_emi_due_dates",
+   "pass": true,
+   "scored": true,
+   "hidden": "5 passed in 0.01s",
+   "seconds": 61.0,
+   "steps": 7,
+   "tool_calls": 6,
+   "pushbacks": 0,
+   "tokens_in": 11024,
+   "tokens_out": 1330,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented correct EMI due-date calculation:\n- Replaced naive 30\u2011day increments with month\u2011aware logic.\n- Handles month/year rollover and uses last day of month when the target day doesn\u2019t exist.\n- All tests now pass (2/2).",
+   "trace": "20261106-182017.jsonl"
+  },
+  {
+   "task": "04_mess_bill_shared_extras",
+   "pass": true,
+   "scored": true,
+   "hidden": "4 passed in 0.01s",
+   "seconds": 120.6,
+   "steps": 10,
+   "tool_calls": 9,
+   "pushbacks": 0,
+   "tokens_in": 15555,
+   "tokens_out": 1523,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented safe default for `extras` in `MessBill` to avoid shared mutable list across instances. Updated `__init__` to use `None` and initialize a new list per bill. All tests now pass.",
+   "trace": "20261106-182118.jsonl"
+  },
+  {
+   "task": "05_ipl_batter_runs",
+   "pass": true,
+   "scored": true,
+   "hidden": "3 passed in 0.01s",
+   "seconds": 360.8,
+   "steps": 27,
+   "tool_calls": 25,
+   "pushbacks": 1,
+   "tokens_in": 89387,
+   "tokens_out": 9023,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "All tests now pass (`1 passed`). The batter stats correctly exclude extras from runs and only count balls when the delivery isn\u2019t a wide.",
+   "trace": "20261106-182319.jsonl"
+  },
+  {
+   "task": "06_sgpa_division",
+   "pass": false,
+   "scored": true,
+   "hidden": "1 failed, 3 passed in 0.04s",
+   "seconds": 60.6,
+   "steps": 7,
+   "tool_calls": 6,
+   "pushbacks": 0,
+   "tokens_in": 10428,
+   "tokens_out": 331,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented correct SGPA calculation by replacing integer division with true division in `grades.py`. All tests now pass (`3 passed`).",
+   "trace": "20261106-182920.jsonl"
+  },
+  {
+   "task": "07_pnr_status_parse",
+   "pass": false,
+   "scored": true,
+   "hidden": "1 failed, 16 passed in 0.04s",
+   "seconds": 121.5,
+   "steps": 11,
+   "tool_calls": 10,
+   "pushbacks": 0,
+   "tokens_in": 34989,
+   "tokens_out": 2787,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented robust parsing in **pnr.py**:\n- Normalized case for matching.\n- Added support for CNF with optional berth, RAC with flexible formats, and any WL-prefixed waiting list types.\n- Included validation and error handling for malformed inputs.\nAll tests now pass (`4 passed`).",
+   "trace": "20261106-183021.jsonl"
+  },
+  {
+   "task": "08_merit_list_order",
+   "pass": true,
+   "scored": true,
+   "hidden": "4 passed in 0.01s",
+   "seconds": 119.8,
+   "steps": 9,
+   "tool_calls": 8,
+   "pushbacks": 0,
+   "tokens_in": 17180,
+   "tokens_out": 1517,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented correct sorting in `merit_list` using a single tuple key to prioritize CGPA, attendance, then roll number. Updated `ranks` to assign shared ranks for students with identical CGPA and attendance, skipping subsequent ranks appropriately. All tests now pass.",
+   "trace": "20261106-183223.jsonl"
+  },
+  {
+   "task": "09_zomato_coupon",
+   "pass": true,
+   "scored": true,
+   "hidden": "8 passed in 0.02s",
+   "seconds": 178.9,
+   "steps": 12,
+   "tool_calls": 11,
+   "pushbacks": 0,
+   "tokens_in": 22009,
+   "tokens_out": 1518,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented optional `coupon` argument in `order_total` with validation and discount logic for `FLAT100` and `SAVE20`. Updated function signature, added case\u2011insensitive handling, subtotal\u2011only discounts, and error raising for invalid codes or conditions. All tests now pass.",
+   "trace": "20261106-183423.jsonl"
+  },
+  {
+   "task": "10_upi_amount_formats",
+   "pass": true,
+   "scored": true,
+   "hidden": "14 passed in 0.02s",
+   "seconds": 61.6,
+   "steps": 7,
+   "tool_calls": 6,
+   "pushbacks": 0,
+   "tokens_in": 11767,
+   "tokens_out": 1122,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented robust `parse_amount` to handle various rupee formats, including symbols, prefixes, commas, and sign handling, using `Decimal` for precise conversion. Updated docstring and logic accordingly. All tests now pass (4 passed).",
+   "trace": "20261106-183723.jsonl"
+  },
+  {
+   "task": "11_upi_payment_validation",
+   "pass": true,
+   "scored": true,
+   "hidden": "18 passed in 0.01s",
+   "seconds": 240.1,
+   "steps": 18,
+   "tool_calls": 17,
+   "pushbacks": 0,
+   "tokens_in": 40115,
+   "tokens_out": 2214,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented comprehensive validation in **payments.py**:\n- Added docstring explaining validation rules.\n- Checked VPA format: exactly one '@', non\u2011empty local/domain parts, no spaces.\n- Ensured amount is positive and does not exceed the \u20b91\u202flakh UPI limit.\n- Raised `ValueError` with clear messages for any validation failure.\n\nAll existing tests pass (`2 passed`).",
+   "trace": "20261106-183825.jsonl"
+  },
+  {
+   "task": "12_ipl_net_run_rate",
+   "pass": true,
+   "scored": true,
+   "hidden": "7 passed in 0.01s",
+   "seconds": 123.6,
+   "steps": 10,
+   "tool_calls": 9,
+   "pushbacks": 0,
+   "tokens_in": 30865,
+   "tokens_out": 4690,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented full NRR calculation and tie\u2011breaking logic:\n\n- Added detailed module docstring.\n- Refactored `points` with docstring.\n- Introduced `_overs_to_float` helper for cricket overs conversion.\n- Implemented `net_run_rate` handling all\u2011out overs, skipping no\u2011result matches, aggregating runs/overs, and rounding to 3 decimals.\n- Updated `table` to include NRR and sort by points, NRR, then team name.\n- Updated file with comprehensive comments and docstrings.\n\nAll tests now pass (`7 passed`).",
+   "trace": "20261106-184225.jsonl"
+  },
+  {
+   "task": "13_gst_invoice_igst",
+   "pass": true,
+   "scored": true,
+   "hidden": "9 passed in 0.01s",
+   "seconds": 122.2,
+   "steps": 12,
+   "tool_calls": 11,
+   "pushbacks": 0,
+   "tokens_in": 23040,
+   "tokens_out": 2124,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented fix in **gstin.py**:\n- Updated `state_code` to return the first two characters (state code) instead of just the first character.\n- This corrects intra\u2011state detection, ensuring invoices between different states (e.g., Pune\u202f27 and Bengaluru\u202f29) use IGST rather than CGST\u202f+\u202fSGST.\n\nAll tests run successfully (`pytest -q` passes).",
+   "trace": "20261106-184429.jsonl"
+  },
+  {
+   "task": "14_rename_emi_function",
+   "pass": true,
+   "scored": true,
+   "hidden": "3 passed in 0.01s",
+   "seconds": 239.4,
+   "steps": 19,
+   "tool_calls": 18,
+   "pushbacks": 0,
+   "tokens_in": 49586,
+   "tokens_out": 2108,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Renamed `calc_emi` to `monthly_emi` across the project:\n\n- Updated function definition and internal call in **emi.py**.\n- Adjusted `total_interest` to use `monthly_emi`.\n- Modified imports and usage in **loan_report.py**.\n- Updated test imports and assertions in **tests/test_emi.py**.\n- Verified no remaining references to `calc_emi` and all tests pass (`4 passed`).",
+   "trace": "20261106-184632.jsonl"
+  },
+  {
+   "task": "15_wallet_cashback_loop",
+   "pass": true,
+   "scored": true,
+   "hidden": "8 passed in 0.01s",
+   "seconds": 120.4,
+   "steps": 8,
+   "tool_calls": 7,
+   "pushbacks": 0,
+   "tokens_in": 13496,
+   "tokens_out": 990,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented fix by preventing cashback credits from triggering further cashback calculations. Updated `rewards.py` to ignore both \"receive\" and \"cashback\" transaction kinds. All tests now pass (2 passed).",
+   "trace": "20261106-185031.jsonl"
+  },
+  {
+   "task": "16_zomato_csv_typeerror",
+   "pass": true,
+   "scored": true,
+   "hidden": "4 passed in 0.06s",
+   "seconds": 62.1,
+   "steps": 9,
+   "tool_calls": 8,
+   "pushbacks": 0,
+   "tokens_in": 16094,
+   "tokens_out": 738,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Fixed the TypeError by converting CSV string values to integers in `order_amount`. Updated `orders.py` to cast `price_paise` and `qty` to `int` before multiplication. Ran `python report.py` and confirmed the summary prints correctly with total and per\u2011restaurant spend.",
+   "trace": "20261106-185232.jsonl"
+  },
+  {
+   "task": "17_station_code_crash",
+   "pass": true,
+   "scored": true,
+   "hidden": "2 passed in 0.01s",
+   "seconds": 120.5,
+   "steps": 9,
+   "tool_calls": 8,
+   "pushbacks": 0,
+   "tokens_in": 15253,
+   "tokens_out": 1531,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented robust `station_name` in **stations.py**:\n- Added docstring and normalization (strip whitespace, uppercase).\n- Returns station name or raises `ValueError` with the unknown code.\n- Updated logic accordingly.\n\nAll tests now pass (`2 passed`). This fixes crashes for lowercase/whitespace inputs and provides clear errors for invalid codes.",
+   "trace": "20261106-185335.jsonl"
+  },
+  {
+   "task": "18_refactor_meal_price",
+   "pass": true,
+   "scored": true,
+   "hidden": "4 passed in 0.01s",
+   "seconds": 117.9,
+   "steps": 7,
+   "tool_calls": 6,
+   "pushbacks": 0,
+   "tokens_in": 12495,
+   "tokens_out": 1031,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented a shared `meal_price` function handling pricing logic, including guest markup and Sunday special. Updated `student_bill` and `guest_bill` to use this helper, removing duplicated code. All tests pass (3 passed).",
+   "trace": "20261106-185535.jsonl"
+  },
+  {
+   "task": "19_refactor_split_checks",
+   "pass": true,
+   "scored": true,
+   "hidden": "7 passed in 0.01s",
+   "seconds": 63.3,
+   "steps": 8,
+   "tool_calls": 7,
+   "pushbacks": 0,
+   "tokens_in": 16039,
+   "tokens_out": 1353,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented a shared `check_amount(paise)` helper in **splitter.py** to centralize validation of amount inputs. Updated `split_equal`, `split_by_shares`, and `split_custom` to use this helper, preserving original behavior and error messages. All tests pass (4 passed).",
+   "trace": "20261106-185734.jsonl"
+  },
+  {
+   "task": "20_explain_failing_test",
+   "pass": true,
+   "scored": true,
+   "hidden": "2 passed in 0.01s",
+   "seconds": 237.5,
+   "steps": 13,
+   "tool_calls": 12,
+   "pushbacks": 1,
+   "tokens_in": 23779,
+   "tokens_out": 2088,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "**Explanation of the failure**\n\n`format_inr` builds the formatted string by:\n\n1. Determining the sign (`\"-\"` for negative values).  \n2. Splitting the absolute amount into rupees (`rupees`) and paise (`p`).  \n3. Converting the rupee part to a string (`digits`).  \n4. If the rupee string has more than three digits, it groups the leading part in **pairs of two** (Indian grouping) and then joins them with commas, finally appending the last three\u2011digit block.  \n5. Returns `f\"{sign}\u20b9{digits}.{p:02d}\"`.\n\nThe test `test_big_amount` expects the output for `98765432100` paise (i.e.\u202f\u20b9987,654,321.00) to be `\"\u20b9987,654,321.00\"`.\n\nWith the current algorithm, for a 9\u2011digit rupee value (`987654321`), the grouping works as follows:\n\n* `digits = \"987654321\"` \u2192 `head = \"987654\"` and `tail = \"321\"`.\n* The loop groups the head in pairs: `\"98\"`, `\"76\"`, leaving `\"54\"` as the final head.\n* The resulting groups become `[\"54\", \"98\", \"76\"]`, which are joined as `\"54,98,76\"`.\n* Adding the tail gives `\"54,98,76,321\"`.\n\nThus the function returns `\"\u20b954,98,76,321.00\"` instead of the expected `\"\u20b9987,654,321.00\"`.\n\n**Why the test fails**\n\nThe implementation incorrectly applies the Indian grouping rule. It treats the *entire* leading part (`head`) as a series of two\u2011digit groups, which works for numbers up to a lakh (e.g., `12345678 \u2192 1,23,456.78`) but breaks for larger numbers where the first group should contain **three** digits (the crore\u2011level grouping). The test `test_big_amount` exposes this bug.",
+   "trace": "20261106-185837.jsonl"
+  }
+ ]
+}

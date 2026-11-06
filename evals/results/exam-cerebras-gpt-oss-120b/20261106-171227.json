@@ -1,0 +1,30 @@
+{
+ "set": "exam",
+ "provider": "cerebras",
+ "model": "gpt-oss-120b",
+ "passed": 1,
+ "total": 1,
+ "not_scored": 0,
+ "seconds": 127.2,
+ "date": "2026-11-06 17:12",
+ "rows": [
+  {
+   "task": "20_explain_failing_test",
+   "pass": true,
+   "scored": true,
+   "hidden": "2 passed in 0.01s",
+   "seconds": 127.2,
+   "steps": 11,
+   "tool_calls": 10,
+   "pushbacks": 1,
+   "tokens_in": 18897,
+   "tokens_out": 3168,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "**What\u2019s happening**\n\n`tests/test_money.py` checks four cases:\n\n| Test | Expected output |\n|------|-----------------|\n| `test_small` | `\u20b95.00` |\n| `test_thousands` | `\u20b91,234.56` |\n| `test_lakh` | `\u20b91,23,456.78` |\n| `test_negative` | `-\u20b9249.00` |\n| **`test_big_amount`** | **`\u20b9987,654,321.00`** |\n\nThe implementation in **`money.py`** formats numbers using *Indian* digit\u2011grouping:\n\n```python\nif len(digits) > 3:\n    head, tail = digits[:-3], digits[-3:]\n    groups = []\n    while len(head) > 2:\n        groups.insert(0, head[-2:])\n        head = head[:-2]\n    if head:\n        groups.insert(0, head)\n    digits = \",\".join(groups) + \",\" + tail\n```\n\nFor a value of `98765432100` paise (i.e. `987,654,321` rupees) this produces:\n\n```\n\u20b998,76,54,321.00\n```\n\nwhich follows the Indian pattern `\u2026,xx,xx,xxx`.  \n\nHowever, **`test_big_amount` expects the *Western* grouping** (`\u2026,xxx,xxx,xxx`). Because the function always applies the Indian grouping, the output does not match the expected string, and the test fails.\n\nThe alternate file `bad_fix/money.py` uses Python\u2019s default `\"{rupees:,}\"` formatting, which would give the Western grouping and pass `test_big_amount`, but it would break `test_lakh` (which expects Indian grouping).\n\n**Bottom line:** `test_big_amount` fails because the current `format_inr` implementation applies Indian digit grouping to all numbers, while the test expects standard Western grouping for large amounts. No code changes have been made yet.",
+   "trace": "20261106-171019.jsonl"
+  }
+ ]
+}

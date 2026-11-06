@@ -1,7 +1,7 @@
 [project]
 name = "forge"
 version = "0.1.0"
-description = "Add your description here"
+description = "Build your own coding agent in Python: a Claude Code-style agent on free online models"
 readme = "README.md"
 authors = [
     { name = "Developers Assist", email = "269756727+DeveloperAssist@users.noreply.github.com" }

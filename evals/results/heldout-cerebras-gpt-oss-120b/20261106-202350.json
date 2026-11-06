@@ -1,0 +1,228 @@
+{
+ "set": "heldout",
+ "provider": "cerebras",
+ "model": "gpt-oss-120b",
+ "passed": 12,
+ "total": 12,
+ "not_scored": 0,
+ "seconds": 4870.1,
+ "date": "2026-11-06 20:23",
+ "rows": [
+  {
+   "task": "01_metro_fare_slabs",
+   "pass": true,
+   "scored": true,
+   "hidden": "15 passed in 0.01s",
+   "seconds": 59.3,
+   "steps": 5,
+   "tool_calls": 4,
+   "pushbacks": 0,
+   "tokens_in": 7342,
+   "tokens_out": 333,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented inclusive slab edges by changing the comparison from `<` to `<=` in `fare.py`. All tests now pass (`2 passed`).",
+   "trace": "20261106-190236.jsonl"
+  },
+  {
+   "task": "02_fest_group_discount",
+   "pass": true,
+   "scored": true,
+   "hidden": "14 passed in 0.01s",
+   "seconds": 63.0,
+   "steps": 8,
+   "tool_calls": 7,
+   "pushbacks": 0,
+   "tokens_in": 13241,
+   "tokens_out": 640,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented proper group discount logic in **tickets.py**:\n- Added detailed docstring.\n- Applied tiered discounts: \u226510 tickets \u2192 20%, \u22654 tickets \u2192 10%, otherwise 0%.\n\nAll tests now pass (`2 passed`).",
+   "trace": "20261106-190336.jsonl"
+  },
+  {
+   "task": "03_pincode_check",
+   "pass": true,
+   "scored": true,
+   "hidden": "18 passed in 0.01s",
+   "seconds": 120.3,
+   "steps": 8,
+   "tool_calls": 7,
+   "pushbacks": 0,
+   "tokens_in": 13890,
+   "tokens_out": 1220,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented stricter PIN validation:\n- Strips whitespace, checks exact length of 6.\n- Ensures all characters are ASCII digits only.\n- Disallows PINs starting with 0.\n- Removed special case for \"000000\" as it's covered by the first\u2011digit rule.\n\nAll tests now pass (`pytest -q` shows 2 passed).",
+   "trace": "20261106-190439.jsonl"
+  },
+  {
+   "task": "04_cgpa_credit_weight",
+   "pass": true,
+   "scored": true,
+   "hidden": "9 passed in 0.01s",
+   "seconds": 61.4,
+   "steps": 7,
+   "tool_calls": 6,
+   "pushbacks": 0,
+   "tokens_in": 12036,
+   "tokens_out": 1068,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented credit\u2011weighted SGPA calculation in **grades.py**:\n- Computes total points as grade points \u00d7 credits.\n- Sums credits (ignoring zero\u2011credit audit courses).\n- Returns weighted average rounded to 2 decimals, handling empty or zero\u2011credit cases.\n\nAll tests now pass (`1 passed`).",
+   "trace": "20261106-190640.jsonl"
+  },
+  {
+   "task": "05_cricket_overs_extras",
+   "pass": true,
+   "scored": true,
+   "hidden": "9 passed in 0.01s",
+   "seconds": 3662.2,
+   "steps": 8,
+   "tool_calls": 7,
+   "pushbacks": 0,
+   "tokens_in": 14758,
+   "tokens_out": 773,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented proper legal ball detection in **score.py**:\n- Added detailed docstring.\n- Strips input and checks for extras (`wd`, `nb`) to exclude them from legal ball count.\n\nAll tests now pass, and overs calculation correctly shows `0.2` for the sequence `['1', 'wd', '2']`.",
+   "trace": "20261106-190741.jsonl"
+  },
+  {
+   "task": "06_train_berth_type",
+   "pass": true,
+   "scored": true,
+   "hidden": "16 passed in 0.01s",
+   "seconds": 60.8,
+   "steps": 6,
+   "tool_calls": 5,
+   "pushbacks": 0,
+   "tokens_in": 9330,
+   "tokens_out": 606,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented proper seat validation:\n- Updated `check_seat` to enforce seats within 1..coach size inclusive.\n- Adjusted condition and error message accordingly.\n\nAll tests now pass (`pytest -q` shows 2 passed).",
+   "trace": "20261106-200844.jsonl"
+  },
+  {
+   "task": "07_fest_registration_keyerror",
+   "pass": true,
+   "scored": true,
+   "hidden": "3 passed in 0.01s",
+   "seconds": 120.8,
+   "steps": 11,
+   "tool_calls": 10,
+   "pushbacks": 0,
+   "tokens_in": 27125,
+   "tokens_out": 1955,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented robust handling for optional fields:\n- Updated `contact_list` to safely retrieve `phone`, defaulting to \u201c-\u201d when missing or empty.\n- Modified `team_count` to treat missing/empty `team` as a solo participant, using the person's name as a unique team identifier.\nAll tests now pass (`1 passed`).",
+   "trace": "20261106-200945.jsonl"
+  },
+  {
+   "task": "08_canteen_token_crash",
+   "pass": true,
+   "scored": true,
+   "hidden": "3 passed in 0.01s",
+   "seconds": 177.4,
+   "steps": 11,
+   "tool_calls": 10,
+   "pushbacks": 0,
+   "tokens_in": 22234,
+   "tokens_out": 2250,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Implemented safe handling for empty order lists:\n- Updated `now_serving` to return `None` when no pending orders exist.\n- Updated `avg_wait` to return `0.0` when there are no completed orders.\n\nAll tests pass (`1 passed`) and running `canteen.py` now outputs a valid board without crashing.",
+   "trace": "20261106-201146.jsonl"
+  },
+  {
+   "task": "09_placement_eligibility",
+   "pass": true,
+   "scored": true,
+   "hidden": "5 passed in 0.01s",
+   "seconds": 62.2,
+   "steps": 7,
+   "tool_calls": 6,
+   "pushbacks": 0,
+   "tokens_in": 13524,
+   "tokens_out": 846,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Added `eligible_companies` function to **placements.py** implementing the specified eligibility rules and sorting. Ran the test suite; all existing tests pass.",
+   "trace": "20261106-201444.jsonl"
+  },
+  {
+   "task": "10_upi_split_equal",
+   "pass": true,
+   "scored": true,
+   "hidden": "12 passed in 0.02s",
+   "seconds": 120.1,
+   "steps": 8,
+   "tool_calls": 7,
+   "pushbacks": 0,
+   "tokens_in": 16944,
+   "tokens_out": 2460,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Added `split_equal` function to `splitter.py` with validation, equal distribution logic, order preservation, and a sanity check. Ran tests (`pytest -q`) \u2013 all existing tests pass.",
+   "trace": "20261106-201546.jsonl"
+  },
+  {
+   "task": "11_rename_hostel_fee",
+   "pass": true,
+   "scored": true,
+   "hidden": "4 passed in 0.02s",
+   "seconds": 303.2,
+   "steps": 26,
+   "tool_calls": 24,
+   "pushbacks": 1,
+   "tokens_in": 90281,
+   "tokens_out": 6208,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "Renamed `calc` to `hostel_fee` (parameter `months`) in `fees.py`, updated all imports and calls in `receipt.py`, `defaulters.py`, and the tests. Adjusted internal logic to use the new parameter name. Ran the test suite \u2013 all tests now pass (2 passed).",
+   "trace": "20261106-201747.jsonl"
+  },
+  {
+   "task": "12_explain_batting_average",
+   "pass": true,
+   "scored": true,
+   "hidden": "4 passed in 0.01s",
+   "seconds": 59.4,
+   "steps": 6,
+   "tool_calls": 5,
+   "pushbacks": 1,
+   "tokens_in": 7715,
+   "tokens_out": 922,
+   "models": [
+    "gpt-oss-120b"
+   ],
+   "error": "",
+   "answer": "**What the code does**\n\n* `batting_average` computes  \n\n```python\ntotal_runs = sum(i.runs for i in innings)          # 50 + 30 = 80\nouts = sum(1 for i in innings if i.out)            # only the first innings is out \u2192 1\naverage = total_runs / outs                        # 80 / 1 = 80.0\n```\n\nThe function\u2019s doc\u2011string even says *\u201cRuns per dismissal (cricket's batting average). None if the batter was never out.\u201d* \u2013 which is the standard cricket definition: you divide by the number of **dismissals**, not by the total number of innings.\n\n**Why the test fails**\n\nThe test `test_average_with_not_out` expects the average to be `40.0`, i.e. it is dividing the total runs by the total number of innings (`80 / 2 = 40`). That is **not** the cricket batting\u2011average definition; it treats a \u201cnot\u2011out\u201d innings as if it were a dismissal.\n\nSo the failure is not caused by a bug in `batting_average`; it\u2019s a mismatch between the test\u2019s expectation and the conventional definition implemented in the code. Either the test should be changed to expect `80.0` (or `None` if there were no dismissals), or the function\u2019s semantics would need to be altered to compute \u201cruns per innings\u201d instead of \u201cruns per dismissal\u201d.",
+   "trace": "20261106-202250.jsonl"
+  }
+ ]
+}
