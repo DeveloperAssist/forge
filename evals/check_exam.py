@@ -9,7 +9,7 @@ For each task folder in evals/exam/NN_name:
 "No-change" tasks (they have a bad_fix/ folder and a grading.md) are checked the other way round:
 hidden tests PASS on the untouched code and FAIL once bad_fix/ is copied over it.
 
-Run (from the project folder):  uv run python evals/check_exam.py [task-id ...]
+Run (from the project folder):  uv run python evals/check_exam.py [--set exam|heldout] [task-id ...]  (--set defaults to exam)
 """
 from __future__ import annotations
 
@@ -87,7 +87,12 @@ def check_task(task: Path) -> list[str]:
 def main(argv: list[str]) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    tasks = sorted(p for p in EXAM.iterdir() if p.is_dir() and p.name[:2].isdigit())
+    root = EXAM
+    if "--set" in argv:
+        i = argv.index("--set")
+        root = EXAM.parent / argv[i + 1]
+        argv = argv[:i] + argv[i + 2:]
+    tasks = sorted(p for p in root.iterdir() if p.is_dir() and p.name[:2].isdigit())
     if argv:
         tasks = [t for t in tasks if any(t.name.startswith(a) for a in argv)]
     bad = 0

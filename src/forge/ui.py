@@ -37,6 +37,8 @@ class Screen:
         elif kind == "wait":
             console.print(f"[yellow]free-tier token limit reached: waiting {d['seconds'] / 60:.1f} min, "
                           "then carrying on[/]")
+        elif kind == "switch":
+            console.print(f"[yellow]{d['reason']}: switching to {d['model']} via {d['provider']}[/]")
         elif kind == "compact":
             console.print(f"[dim]context was {d['before']:,} tokens: older parts summarised to make room[/]")
         elif kind in ("helper_tool_call", "helper_tool_result"):

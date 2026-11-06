@@ -75,7 +75,7 @@ def run_task(task: Path, settings: config.Settings, out: Path) -> dict:
         "tool_calls": events.count("tool_call"),
         "pushbacks": events.count("check"),
         "tokens_in": agent.tokens["prompt"],
-        "tokens_out": agent.tokens["output"],
+        "tokens_out": agent.tokens["output"], "models": [m for _, m in agent.llm.chain[: agent.llm.at + 1]],
         "error": error,
         "answer": answer[:2000],
         "trace": trace.path.name,
@@ -88,6 +88,7 @@ def main() -> None:
     p.add_argument("--provider", choices=list(config.PROVIDERS))
     p.add_argument("--model")
     p.add_argument("--only", help="run tasks whose name contains this")
+    p.add_argument("--fallback", action="store_true", help="allow switching provider on limits (default: one model)")
     args = p.parse_args()
     # the agent's commands use this project's Python (3.14, with pytest), like `uv run` would
     os.environ["PATH"] = str(Path(sys.executable).parent) + os.pathsep + os.environ.get("PATH", "")
@@ -96,6 +97,8 @@ def main() -> None:
     if args.only:
         tasks = [t for t in tasks if args.only in t.name]
     s = config.load(root, provider=args.provider, model=args.model, mode="auto")
+    if not args.fallback:
+        s.fallbacks = []  # an exam scores ONE model: a switch would mix two models in one score
     warning = config.fit_to_model(s)
     if warning:
         print(warning)

@@ -8,10 +8,19 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# Both speak the OpenAI chat API, so one client works for either.
+# Every one of these speaks the OpenAI chat API, so one client works for all of them. All have a free tier.
+# When one runs out of free quota, Forge moves to the next one in `fallbacks` that you have a key for.
 PROVIDERS = {
-    "ollama": {"base_url": "http://localhost:11434/v1", "model": "forge-8b", "key_env": None},  # forge setup
-    "groq": {"base_url": "https://api.groq.com/openai/v1", "model": "openai/gpt-oss-120b", "key_env": "GROQ_API_KEY"},
+    "groq": {"base_url": "https://api.groq.com/openai/v1", "model": "openai/gpt-oss-120b",
+             "key_env": "GROQ_API_KEY", "signup": "console.groq.com"},
+    "cerebras": {"base_url": "https://api.cerebras.ai/v1", "model": "gpt-oss-120b",
+                 "key_env": "CEREBRAS_API_KEY", "signup": "cloud.cerebras.ai"},
+    "gemini": {"base_url": "https://generativelanguage.googleapis.com/v1beta/openai/", "model": "gemini-2.5-flash",
+               "key_env": "GEMINI_API_KEY", "signup": "aistudio.google.com"},
+    "openrouter": {"base_url": "https://openrouter.ai/api/v1", "model": "openai/gpt-oss-120b:free",
+                   "key_env": "OPENROUTER_API_KEY", "signup": "openrouter.ai"},
+    "ollama": {"base_url": "http://localhost:11434/v1", "model": "forge-8b",  # optional: needs a GPU, forge setup
+               "key_env": None, "signup": "ollama.com"},
 }
 
 MODES = ("plan", "ask", "auto")  # plan = read only · ask = approve every change · auto = edits run, commands ask
@@ -19,29 +28,39 @@ MODES = ("plan", "ask", "auto")  # plan = read only · ask = approve every chang
 
 @dataclass
 class Settings:
-    provider: str = "ollama"
+    provider: str = "groq"
     model: str = ""
     mode: str = "ask"
     max_steps: int = 40
     context_budget: int = 24_000  # tokens we let the conversation grow to before compacting
+    fallbacks: list[str] = field(default_factory=lambda: ["groq", "cerebras", "gemini", "openrouter"])
     allow_commands: list[str] = field(default_factory=lambda: [
         "pytest", "python -m pytest", "uv run pytest", "ruff", "uv run ruff",
         "git status", "git diff", "git log", "ls", "dir",
     ])
 
-    @property
-    def base_url(self) -> str:
-        return PROVIDERS[self.provider]["base_url"]
+    def chain(self) -> list[tuple[str, str]]:
+        """(provider, model) pairs to try in order: the one you picked first, then the fallbacks you have keys for."""
+        out = [(self.provider, self.model)]
+        for name in self.fallbacks:
+            if name != self.provider and has_key(name):
+                out.append((name, PROVIDERS[name]["model"]))
+        return out
 
-    @property
-    def api_key(self) -> str:
-        env = PROVIDERS[self.provider]["key_env"]
-        if env is None:
-            return "ollama"  # Ollama ignores the key, but the client wants one
-        key = os.environ.get(env, "")
-        if not key:
-            raise SystemExit(f"Set {env} first (free key: console.groq.com), or use --provider ollama")
-        return key
+
+def has_key(provider: str) -> bool:
+    env = PROVIDERS[provider]["key_env"]
+    return env is None or bool(os.environ.get(env))
+
+
+def api_key(provider: str) -> str:
+    env = PROVIDERS[provider]["key_env"]
+    if env is None:
+        return "local"  # Ollama ignores the key, but the client wants one
+    key = os.environ.get(env, "")
+    if not key:
+        raise SystemExit(f"Set {env} first (free key: {PROVIDERS[provider]['signup']}), or pick another --provider")
+    return key
 
 
 def load(root: Path, **overrides) -> Settings:

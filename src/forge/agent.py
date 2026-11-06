@@ -33,6 +33,8 @@ class Agent:
         if not helper:
             ws.explore = self.explore
             llm.on_wait = lambda secs: self.on_event("wait", seconds=secs)
+            llm.on_switch = lambda provider, model, reason: self.on_event("switch", provider=provider, model=model,
+                                                                          reason=reason)
 
     # ------------------------------------------------------------------------------------------------ the loop
     def ask(self, user_text: str) -> str:
