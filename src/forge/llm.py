@@ -122,7 +122,8 @@ class LLM:
                     time.sleep(secs + 1)
                 elif self.next_provider(f"{self.provider} free limit reached"):  # daily limit: next provider
                     continue
-                elif secs is not None and secs <= MAX_WAIT:  # nowhere else to go: wait if it is not too long
+                elif secs is None or secs <= MAX_WAIT:  # nowhere else to go: wait (30 s if it did not say)
+                    secs = 30.0 if secs is None else secs
                     if self.on_wait:
                         self.on_wait(secs)
                     time.sleep(secs + 2)

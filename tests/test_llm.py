@@ -85,3 +85,11 @@ def test_gemini_thought_signature_goes_back():
     msg = Reply("", [ToolCall("1", "read_file", {"path": "a.py"}, "", sig)]).as_message()
     assert msg["tool_calls"][0]["extra_content"] == sig
     assert "extra_content" not in Reply("", [ToolCall("2", "read_file", {})]).as_message()["tool_calls"][0]
+
+
+def test_limit_without_a_wait_time_and_no_fallback_waits(monkeypatch):
+    clients = {"groq": FakeClient(limit_error("Too many requests"), ok("after a wait"))}
+    llm = make(monkeypatch, clients, keys=("GROQ_API_KEY",))
+    waited = []
+    llm.on_wait = waited.append
+    assert llm.chat([{"role": "user", "content": "hi"}], []).text == "after a wait" and waited == [30.0]
